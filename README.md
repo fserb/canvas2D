@@ -28,10 +28,6 @@ Feature list
 
 - **Wide gamut**. Support for FP16 - Extended SRGB mode.
 
-- **Color spaces**. Support Array color input, other types.
-
-- **Text layout**.
-
 
 Rationale
 ---------
@@ -47,3 +43,10 @@ Also, modern 2D developers sometimes have to fallback to GL for features that ar
 Finally, modern browsers implement a rich set of rendering features that are currently unavailable to developers. Bridging that gap and giving more power to developers is a good thing.
 
 
+Especulative list
+-----------------
+
+- Color spaces
+- Text layout
+- Path2D operations
+- Display list mode support for HTMLCanvasElement?
