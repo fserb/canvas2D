@@ -1,12 +1,7 @@
-Canvas Context Loss
+Canvas context loss
 ===================
 
 2D Canvas Rendering contexts are currently required to have persistent backing stores. This proposal aims to relax that requirement by introducing an API that allows canvases to be discarded by the browser and re-drawn by the web application on demand.
-
-Goals and Use Case
-------------------
-
-
 
 
 Proposal

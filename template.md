@@ -3,17 +3,19 @@ Feature
 
 {summary}
 
-Goals and Use Case
-------------------
-
-- {goal}
+{goals and use cases}
 
 
 Proposal
 --------
 
 ```webidl
-// WebIDL changes
+interface mixin CanvasFeature {
+
+};
+
+CanvasRenderingContext2D includes CanvasFeature;
+OffscreenCanvasRenderingContext2D includes CanvasFeature;
 ```
 
 {overall usage}
@@ -25,7 +27,8 @@ Example usage
 
 ```js
 // Javascript example
-const ctx = document.createElement('canvas').getContext('2d');
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
 
 ```
 

@@ -1,9 +1,6 @@
 Batch drawImage
 ===============
 
-Goals and Use Case
-------------------
-
 Many web applications use `Canvas2D.drawImage` in sequence, where a large number of calls can occur on each frame. In those cases, Javascript call can be a strong bottleneck on rendering.
 
 - near-native performance for sprite/tile based animation and games.
