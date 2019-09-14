@@ -13,13 +13,15 @@ Proposal
 --------
 
 ```webidl
-
-interface CanvasRenderingContext2D {
+interface mixin CanvasDrawImageBatch {
   void drawImagePositionBatch(CanvasImageSource source, Float32Array drawParameters);
   void drawImageDestRectBatch(CanvasImageSource source, Float32Array drawParameters);
   void drawImageSrcDestBatch(CanvasImageSource source, Float32Array drawParameters);
   void drawImageSrcTransformBatch(CanvasImageSource source, Float32Array drawParameters);
-}
+};
+
+CanvasRenderingContext2D includes CanvasDrawImageBatch;
+OffscreenCanvasRenderingContext2D includes CanvasDrawImageBatch;
 ```
 
 The `drawParameters` is interepreted as a sequence of draw commands, where each sequence has different size depending on the function:

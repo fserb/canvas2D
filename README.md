@@ -6,20 +6,31 @@ This repo contains proposal for an updated modern version of the Canvas 2D API.
 Feature list
 ------------
 
-| Feature | Explainer | Status |
-| ------- |------|-----|
-| Non-affine transforms | | |
-| Batch drawImage | [explainer](spec/batch-drawimage.md) | initial explainer |
-| Draw primitives | | |
-| Modern filter | | |
-| Recorded pictures | | |
-| Path2D Inspection | | |
-| willReadFrequently | | |
-| Canvas context loss | | |
-| More text modifiers | | |
-| Wide gamut | | |
-| Color spaces | | |
-| Text layout | | |
+- [**Batch drawImage**](spec/batch-drawimage.md). Support for multiple images being drawn within a single API call.
+
+- [**Canvas context loss**](spec/context-loss.md). Allow canvas to be discarded and re-drawn by demand.
+
+- **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
+
+- **Draw primitives**. RoundRect, Oval primitives for both path and context. Other types of gradients (e.g., conic). Clear?
+
+- **Modern filter**. Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
+
+- **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
+
+- **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
+
+- **willReadFrequently**. context creation attribute.
+
+- **Array color input**. support for new color input on Canvas.
+
+- **More text rendering modifiers**. letterSpacing, etc.
+
+- **Wide gamut**. Support for FP16 - Extended SRGB mode.
+
+- **Color spaces**. Support Array color input, other types.
+
+- **Text layout**.
 
 
 Rationale

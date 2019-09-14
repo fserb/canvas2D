@@ -18,6 +18,8 @@ Proposal
 
 {overall usage}
 
+### Open issues
+
 Example usage
 -------------
 
