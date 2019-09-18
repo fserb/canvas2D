@@ -1,4 +1,4 @@
-Modern Canvas 2D API
+Update Canvas 2D API
 ====================
 
 This repo contains proposal for an updated version of the Canvas 2D API.
