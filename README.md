@@ -1,7 +1,7 @@
 Modern Canvas 2D API
 ====================
 
-This repo contains proposal for an updated modern version of the Canvas 2D API.
+This repo contains proposal for an updated version of the Canvas 2D API.
 
 Feature list
 ------------
@@ -12,6 +12,8 @@ Feature list
 
 - [**willReadFrequently**](spec/will-read-frequently.md). context creation attribute.
 
+- [**Array color input**](spec/array-color-input.md). support for new color input on Canvas.
+
 - **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
 - **Draw primitives**. RoundRect, Oval primitives for both path and context. Other types of gradients (e.g., conic). Clear?
@@ -21,8 +23,6 @@ Feature list
 - **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
 - **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
-
-- **Array color input**. support for new color input on Canvas.
 
 - **More text rendering modifiers**. letterSpacing, etc.
 
@@ -41,12 +41,3 @@ A common bottleneck for Canvas2D rendering is how many Javascript functions are 
 Also, modern 2D developers sometimes have to fallback to GL for features that are expected to be available in 2D but currently aren’t.
 
 Finally, modern browsers implement a rich set of rendering features that are currently unavailable to developers. Bridging that gap and giving more power to developers is a good thing.
-
-
-Especulative list
------------------
-
-- Color spaces
-- Text layout
-- Path2D operations
-- Display list mode support for HTMLCanvasElement?
