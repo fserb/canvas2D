@@ -22,7 +22,7 @@ interface mixin CanvasShadowStyles {
 
 interface CanvasGradient {
   void addColorStop(double offset, DOMString color);
-  void addColorStop(double offset, sequence>unrestricted double> color);
+  void addColorStop(double offset, sequence<unrestricted double> color);
 }
 ```
 
