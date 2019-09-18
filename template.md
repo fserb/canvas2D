@@ -1,5 +1,6 @@
 Feature
 =======
+**Status**: explainer.
 
 {summary}
 
@@ -20,7 +21,8 @@ OffscreenCanvasRenderingContext2D includes CanvasFeature;
 
 {overall usage}
 
-### Open issues
+### Open issues and questions
+
 
 Example usage
 -------------

@@ -1,5 +1,7 @@
 Canvas context loss
 ===================
+**Status**: explainer.
+
 
 2D Canvas Rendering contexts are currently required to have persistent backing stores. This proposal aims to relax that requirement by introducing an API that allows canvases to be discarded by the browser and re-drawn by the web application on demand.
 
@@ -27,7 +29,7 @@ When the user agent detects that the backing storage associated with a Canvas2D 
     2. If the event's canceled flag is not set, abort these steps.
     3. Queue a task to restore the backing buffer for context.
 
-### Open issues
+### Open issues and questions
 
 - Deprecate `webglcontextlost` in favor of `contextlost`?
 - How to force a context loss for test, as WebGL allows?

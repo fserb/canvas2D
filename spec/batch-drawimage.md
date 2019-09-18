@@ -1,5 +1,6 @@
 Batch drawImage
 ===============
+**Status**: explainer.
 
 Many web applications use `Canvas2D.drawImage` in sequence, where a large number of calls can occur on each frame. In those cases, Javascript call can be a strong bottleneck on rendering.
 
@@ -14,7 +15,7 @@ interface mixin CanvasDrawImageBatch {
   void drawImagePositionBatch(CanvasImageSource source, Float32Array drawParameters);
   void drawImageDestRectBatch(CanvasImageSource source, Float32Array drawParameters);
   void drawImageSrcDestBatch(CanvasImageSource source, Float32Array drawParameters);
-  void drawImageSrcTransformBatch(CanvasImageSource source, Float32Array drawParameters);
+  void drawImageTransformBatch(CanvasImageSource source, Float32Array drawParameters);
 };
 
 CanvasRenderingContext2D includes CanvasDrawImageBatch;
@@ -41,7 +42,7 @@ The `drawParameters` is interepreted as a sequence of draw commands, where each 
 
   Equivalent to `drawImage(source, sx, sy, swidth, sheight, dwidth, dheight)`.
 
-- `drawImageSrcTransformBatch`
+- `drawImageTransformBatch`
 
   10 values per draw `sx, sy, swidth, sheight, a, b, c, d, e, f`.
 
@@ -51,17 +52,18 @@ The `drawParameters` is interepreted as a sequence of draw commands, where each 
 Throws an `INDEX_SIZE_ERR` DOM Exception if the size of `drawParameters` is not a mulitple of the required length.
 
 
-### Open issues
-
-- Support for non-affine transforms on `drawImageSrcTransformBatch`?
-- Support for `sequence<CanvasImageSource>` as well as single image.
-- Could we have less variants? Maybe remove `drawImageDestRectBatch`?
-
 ### Implementation
 
 - A naive implementation (of calling the underlying `drawImage` multiple times) will still get performance improvements as it reduces Javascript overhead.
 - Much less type checking of parameters.
-- Ability for implementations to trully batch those calls.
+- Allow UA to trully batch those calls.
+
+
+### Open issues and questions
+
+- Support for non-affine transforms on `drawImageTransformBatch`?
+- Support for `sequence<CanvasImageSource>` as well as single image.
+- Could we have less variants? Maybe remove `drawImageDestRectBatch`?
 
 
 Example usage
