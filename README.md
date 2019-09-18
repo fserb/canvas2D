@@ -14,6 +14,8 @@ Feature list
 
 - [**Array color input**](spec/array-color-input.md). support for new color input on Canvas.
 
+- [**Text modifiers**](spec/text-modifiers.md). letterSpacing, etc.
+
 - **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
 - **Draw primitives**. RoundRect, Oval primitives for both path and context. Other types of gradients (e.g., conic). Clear?
@@ -23,8 +25,6 @@ Feature list
 - **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
 - **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
-
-- **More text rendering modifiers**. letterSpacing, etc.
 
 - **Wide gamut**. Support for FP16 - Extended SRGB mode.
 

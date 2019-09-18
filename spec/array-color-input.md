@@ -51,7 +51,6 @@ const ctx = canvas.getContext('2d');
 
 ctx.fillStyle = [0.2, 0.33, 0.1, 0.5];
 ctx.strokeStyle = [1.0, 0.0, 0.0];
-
 ```
 
 Alternatives considered
