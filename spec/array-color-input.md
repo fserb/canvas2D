@@ -10,8 +10,10 @@ Proposal
 
 ```webidl
 interface mixin CanvasFillStrokeStyles {
-  attribute (DOMString or sequence<unrestricted double> or CanvasGradient or CanvasPattern) strokeStyle;
-  attribute (DOMString or sequence<unrestricted double> or CanvasGradient or CanvasPattern) fillStyle;
+  attribute (DOMString or sequence<unrestricted double> or
+    CanvasGradient or CanvasPattern) strokeStyle;
+  attribute (DOMString or sequence<unrestricted double> or
+    CanvasGradient or CanvasPattern) fillStyle;
 };
 
 interface mixin CanvasShadowStyles {
