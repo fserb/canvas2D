@@ -14,7 +14,7 @@ Feature list
 
 - [**Array color input**](spec/array-color-input.md). support for new color input on Canvas.
 
-- [**Text modifiers**](spec/text-modifiers.md). letterSpacing, etc.
+- [**Text modifiers**](spec/text-modifiers.md). CSS text/font properties on Canvas.
 
 - **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
