@@ -10,6 +10,8 @@ Feature list
 
 - [**Canvas context loss**](spec/context-loss.md). Allow canvas to be discarded and re-drawn by demand.
 
+- [**willReadFrequently**](spec/will-read-frequently.md). context creation attribute.
+
 - **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
 - **Draw primitives**. RoundRect, Oval primitives for both path and context. Other types of gradients (e.g., conic). Clear?
@@ -19,8 +21,6 @@ Feature list
 - **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
 - **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
-
-- **willReadFrequently**. context creation attribute.
 
 - **Array color input**. support for new color input on Canvas.
 
