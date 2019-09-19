@@ -20,12 +20,13 @@ Feature list
 
 - [**RoundRect**](spec/roundrect.md). Draw primitive.
 
-- **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
+- **conic curves**. Draw primitive.
 
+- **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
 - **New Gradients**. Draw primitive.
 
-- **Modern filter**. Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
+- **Modern filters**. Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
 
 - **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
@@ -35,7 +36,7 @@ Feature list
 Rationale
 ---------
 
-The current Canvas 2D API was originally proposed in 2013. Since then, a lot of 2D graphics APIs have appeared and changed what developers expect from a good 2D API. This proposal tries to modernize Canvas 2D API, considering current and future usage of Canvas and considering the following:
+The [current Canvas 2D API](https://html.spec.whatwg.org/multipage/canvas.html) was originally proposed in 2013. Since then, a lot of 2D graphics APIs have appeared and changed what developers expect from a good 2D API. This proposal tries to modernize Canvas 2D API, considering current and future usage of Canvas and considering the following:
 
 1. Canvas is the web’s direct mode rendering solution that closely matches traditional programming models. This is a particularly common need for games and full featured apps.
 
