@@ -18,9 +18,10 @@ Feature list
 
 - [**clear function**](spec/clear.md). Draw primitive.
 
+- [**RoundRect**](spec/roundrect.md). Draw primitive.
+
 - **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
-- **RoundRect**. Draw primitive.
 
 - **New Gradients**. Draw primitive.
 
@@ -29,8 +30,6 @@ Feature list
 - **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
 - **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
-
-- **Wide gamut**. Support for FP16 - Extended SRGB mode.
 
 
 Rationale
