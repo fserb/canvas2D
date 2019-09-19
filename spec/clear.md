@@ -1,5 +1,5 @@
-Clear()
-=======
+clear function
+==============
 **Status**: explainer.
 
 Provide a `clear()` function that resets the state of the Canvas.
