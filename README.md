@@ -16,7 +16,7 @@ Feature list
 
 - [**Text modifiers**](spec/text-modifiers.md). CSS text/font properties on Canvas.
 
-- [**Clear**](spec/clear.md). Draw primitive.
+- [**clear function**](spec/clear.md). Draw primitive.
 
 - **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
