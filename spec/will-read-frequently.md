@@ -18,7 +18,7 @@ dictionary CanvasRenderingContext2DSettings {
 };
 ```
 
-When the user sets `willReadFrequently` to true, the UA can optimize for read access, usually by not using the CPU for rendering.
+When the user sets `willReadFrequently` to true, the UA can optimize for read access, usually by not using the GPU for rendering.
 
 
 ### Open issues and questions
