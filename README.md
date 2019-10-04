@@ -20,7 +20,7 @@ Feature list
 
 - [**RoundRect**](spec/roundrect.md). Draw primitive.
 
-- **Conic curves**. Draw primitive.
+- [**Conic curves**](spec/conic-curve-to.md). Draw primitive.
 
 - **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
