@@ -22,7 +22,7 @@ Feature list
 
 - [**Conic curves**](spec/conic-curve-to.md). Draw primitive.
 
-- **Non-affine transforms**. Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
+- [**Perspective transforms**](spec/perspective-transforms.md). Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
 
 - **New Gradients**. Draw primitive.
 
