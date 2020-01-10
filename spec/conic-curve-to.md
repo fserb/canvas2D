@@ -3,7 +3,8 @@ ConicCurveTo
 **Status**: explainer.
 
 Draw curves based on conic sections. These are useful as they can represent
-circular arcs exactly.
+circular (as well as elliptical and hyperbolic) paths whereas bezier 
+curves are limited to quadratic arcs.
 
 Proposal
 --------
@@ -14,23 +15,30 @@ interface mixin Canvas {
   void conicCurveTo(double cpx, double cpy, double x, double y, double weight);
 };
 ```
-This is a similar interface to [`bezierCurveTo`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/bezierCurveTo). `conicCurveTo` defines a curve from the starting point (_p_) to
-destination point (_d_) that bends towards control point (_c_) as weighted by
-`weight`.
+This is a similar interface to [`bezierCurveTo`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/bezierCurveTo). `conicCurveTo` defines a curve from the starting point (_P0_) to
+destination point (_P2_) that bends towards control point (_P1_) as weighted by
+`weight`:
 
- - `x`, `y` are the coordinates of _d_.
- - `cpx`, `cpy` are the coordinates of _c_.
- - `weight` defines how much the line moves towards _c_:
-   - `weight = 0` defines a straight line from the _p_ to _d_.
+![Conic curve example](../images/BR-FIG-mid-point.jpg)
+
+Fig 1 - Points on a conic curve [Source](http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/NURBS/RB-conics.html)
+
+ - `x`, `y` are the coordinates of _P2_.
+ - `cpx`, `cpy` are the coordinates of _P1_.
+ - `weight` defines how much the line bends towards _P1_:
+   - `weight = 0` defines a straight line from the _P0_ to _P2_.
    - `weight = 1` defines a quadratic path.
-   - `weight < 1` is elliptical, while `weight > 1` is hyperbolic
-   - If the line from the _pc_ makes a 90&deg; angle with the line from the _cd_
-   , then `weight = sqrt(2)/2` defines a circular arc. This can be used for
-   rounded corners.
+   - `weight < 1` is elliptical, while `weight > 1` is hyperbolic.
+   - `weight = infinity` essentially makes two line segments _P0P1_ and _P1P2_.
+   
+If _P0_, _P1_ and _P2_ are all the corners of a square, then `weight = sqrt(2)/2` defines a circular arc. This can be used for rounded corners.
+
+The mathematical derivation of these quantities can be found [here](http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/NURBS/RB-conics.html).
 
 ### Open issues and questions
 
-- Is this functionality needed or desired by developers?
+- How much demand is there for this among developers
+- This is already implemented by Skia, but are there performance implications?
 
 Example usage
 -------------
