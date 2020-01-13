@@ -30,6 +30,10 @@ Feature list
 
 - **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
+- **Batch text rendering**.
+
+- **Text blob**.
+
 - **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
 
 
