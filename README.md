@@ -22,9 +22,9 @@ Feature list
 
 - [**Conic curves**](spec/conic-curve-to.md). Draw primitive.
 
-- [**Perspective transforms**](spec/perspective-transforms.md). Allow for perspective transforms Canvas 2D rendering. Support 3x3 transform matrices.
+- [**Perspective transforms**](spec/perspective-transforms.md). Allow for perspective transforms Canvas 2D rendering. Support 4x4 transform matrices.
 
-- **New Gradients**. Draw primitive.
+- [**Conic Gradient**](spec/conic-gradient.md). Draw primitive.
 
 - **Modern filters**. Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
 
