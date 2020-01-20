@@ -1,7 +1,7 @@
 Update Canvas 2D API
 ====================
 
-This repo contains proposal for an updated version of the Canvas 2D API.
+This repo contains proposal for an updated version of the [Canvas 2D API](https://html.spec.whatwg.org/multipage/canvas.html).
 
 Feature list
 ------------
@@ -26,9 +26,9 @@ Feature list
 
 - [**Conic Gradient**](spec/conic-gradient.md). Draw primitive.
 
-- **Modern filters**. Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
+- [**Recorded pictures**](spec/recording.md). Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
-- **Recorded pictures**. Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
+- **Modern filters**. Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
 
 - **Batch text rendering**.
 
