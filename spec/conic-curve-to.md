@@ -3,7 +3,7 @@ ConicCurveTo
 **Status**: explainer.
 
 Draw curves based on conic sections. These are useful as they can represent
-circular (as well as elliptical and hyperbolic) paths whereas bezier 
+circular, elliptical and hyperbolic paths whereas bezier 
 curves are limited to quadratic arcs.
 
 Proposal
@@ -68,3 +68,4 @@ References
 
  - Skia: [SkPath.conicTo](https://skia.org/user/api/SkPath_Reference#SkPath_conicTo)
  - [Conic Sections](https://en.wikipedia.org/wiki/Conic_section)
+ - [Mathematical derivation from NURBS](http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/NURBS/RB-conics.html)
