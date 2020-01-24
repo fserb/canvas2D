@@ -10,37 +10,52 @@ Proposal
 --------
 
 ```webidl
+// Parent class for filter primitives
+interface CanvasFilterPrimitive {}
+
 interface CanvasFilter {
-  attribute DOMString type; // "blend", "colorMatrix", "composite", "convolveMatrix",
-   // "diffuseLighting", "displacementMap", "dropShadow", "gassianBlur", "image", 
-   // "merge", "morphology", "specularLighting", "tile", "turbulence"
+  // Defines functions that call constructors of primitives
+  GaussianBlur(double stdDeviation = 1);
+  DisplacementMap(CanvasImageSource map, double strength = 1);
+  Turbulence(double baseFrequency = 1, double numOctaves = 1);
+  // ...etc for other svg filter types
 
-  attribute DOMString in; // Either another image element or filter primitive
-  attribute DOMString in2; // Same as above
+  // The wrapper function
+  Sequence(CanvasFilterPrimitive[]);
+}
+// And each primitive must be defined individually
 
-  attribute DOMString blendMode; // See https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode
-  attribute DOMMatrix values; // For colorMatrix
-  attribute DOMString operator; // For composite and morphology 
-  // see: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/operator
-  attribute DOMFloat32Array compositeWeights; // k1, k2, k3, k4 for composite type filters
+interface GaussianBlur : CanvasFilterPrimitive {
+  constructor(double stdDeviation = 1);
+  attribute double stdDeviation;
+}
+interface DisplacementMap : CanvasFilterPrimitive {
+  constructor(CanvasImageSource map, double strength = 1);
+  attribute CanvasImageSource map;
+  attribute double strength;
+}
+interface Turbulence : CanvasFilterPrimitive {
+  constructor(double baseFrequency = 1, double numOctave = 1);
+  attribute double baseFrequency;
+  attribute double numOctaves;
+}
+//  ...etc for other primitives, including: Blend, ColorMatrix, ComponentTransfer, Composite, ConvolveMatrix, DiffuseLighting, DropShadow, Flood, Image, Merge, Morphology, Offset, SpecularLighting, Tile
 
-  // etc for attributes of other filter types
-};
+// Finally, the sequence object
+interface Sequence {
+  /*
+    The implementation of this constructor will turn all unused inputs (i.e. first primitives on the filter chain) into drawOp inputs. Every filter primitive in the array will be chained with the following one. The final stage will be the output.
+  */
+  constructor(CanvasFilterPrimitives[]);
+}
 ```
-
-Filters are instantiated with "type" according to types defined [here](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/filter). Attributes of the instantiated filter would reflect the relevant attributes per filter type: a Gaussian blur filter would expose attributes `stdDeviation` and `edgeMode` while a specular lighting filter would have attributes `surfaceScale`
-`specularConstant`, `specularExponent` and `kernelUnitLength`, etc.
 
 ### Open issues and questions
 
+- Is having constructors for other objects possible in `.idl` files?
 - How should we handle 'SrcAlpha' type inputs?
-- Would it make sense to have different `.idl`s and classes for each type of filter?
 - Will it be hard to keep track of filter-stages inputs and outputs with this interface?
-- Does a default "type" make any sense?
-- Are offset and flood necessary? It seems like these are well covered by the canvas 2d interface already.
 - Are the lighting operations possible?
-- For componentTransfer, does it make sense to make a new js object for the function? I.e. allow users to input a function that transforms input `rgb` to output `rgb` like a fragment shader?
-
 
 Example usage
 -------------
@@ -50,12 +65,73 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
+// Create filter primatives
+const turbulence = new CanvasFilter.Turbulence(0.05 /* base frequency */, 2 /* numOctaves */); 
+const displacementMap = new CanvasFilter.DisplacementMap(turbulence /* displacement map */, 30 /* strength */);
+const blur = new CanvasFilter.GaussianBlur(2 /* std deviation */);
+
+/*
+  Create overall filter, the first primitive will get drawing operations as input
+  the output of each primitive will be sent to the input of the following element 
+  in the array. The final element will output to the screen.
+
+  Here the final filter graph will look like this:
+
+                          turbulence
+                              |
+  canvasDrawOps -----> displacementMap -------> blur ------> screen
+*/
+ctx.filter = new CanvasFilter.Sequence([displacementMap, blur]);
+
+// Draw with created filter
+ctx.fillStyle = "magenta";
+ctx.fillRect(10, 10, 300, 200);
+
+// Modify filter
+turbulence.baseFrequency = 1.5; // Denser noise pattern
+blur.stdDeviation = 0.5; // Less blur
+
+// Draw on top with modified filter
+ctx.fillStyle = "cyan";
+ctx.beginPath();
+ctx.arc(160, 110, 80, 0, 2 * Math.PI);
+ctx.fill();
+```
+
+The above code will produce the the following canvas:
+
+![image](../images/filtered-canvas.png)
+
+Alternatives considered
+-----------------------
+
+### Explicit inputs and outputs
+
+```webidl
+interface CanvasFilter {
+  attribute CanvasImageSource in;
+  attribute CanvasImageSource in2;
+}
+
+interface CanvasGaussianBlurFilter : CanvasFilter {
+  attribute unrestricted double stdDeviation;
+  attribute DOMString edgeMode; // "duplicate", "wrap", "none" (default "none")
+}
+```
+
+```js
+const blurFilter = new CanvasGaussianBlurFilter();
+
+// Javascript example
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+
 // Create filters
 const turbulence = new CanvasFilter("turbulence");
 turbulence.baseFrequency = 0.05;
 turbulence.numOctaves = 2;
 const displacementMap = new CanvasFilter("displacementMap");
-displacementMap.in = canvas;
+displacementMap.in = ctx; // Draw ops as inputs
 displacementMap.in2 = turbulence;
 displacementMap.scale = 30;
 const outputFilter = new CanvasFilter();
@@ -81,32 +157,7 @@ ctx.arc(160, 110, 80, 0, 2 * Math.PI);
 ctx.fill();
 ```
 
-The above code will produce the the following canvas:
-
-![image](../images/filtered-canvas.png)
-
-Alternatives considered
------------------------
-
-### Per filter-type idls
-
-```webidl
-interface CanvasFilter {
-  attribute CanvasImageSource in;
-  attribute CanvasImageSource in2;
-}
-
-interface CanvasGaussianBlurFilter : CanvasFilter {
-  attribute unrestricted double stdDeviation;
-  attribute DOMString edgeMode; // "duplicate", "wrap", "none" (default "none")
-}
-```
-
-```js
-const blurFilter = new CanvasGaussianBlurFilter();
-```
-
-This approach has the advantage of making the `.idl` files simpler, but requires the users to know about many different new javascript objects.
+This approach forgoes the `Sequence` class in favor of making inputs more explicit. The downside is that without the final filter construction phase it's less clear what's going on. Also the code to make draw ops inputs is not straightforward.
 
 
 References
