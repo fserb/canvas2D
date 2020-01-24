@@ -28,7 +28,7 @@ Feature list
 
 - [**Recorded pictures**](spec/recording.md). Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
-- **Modern filters**. Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
+- [**Modern filters**](spec/filters.md). Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
 
 - **Batch text rendering**.
 
