@@ -36,6 +36,8 @@ Feature list
 
 - **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
 
+- **Element as a source for drawImage**
+
 
 Rationale
 ---------
