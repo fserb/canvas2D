@@ -71,6 +71,7 @@ interface Sequence {
 - Will it be hard to keep track of filter-stages inputs and outputs with this
 interface?
 - Are the lighting operations possible?
+- make filters immutable.
 
 Example usage
 -------------

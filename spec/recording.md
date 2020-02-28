@@ -51,6 +51,7 @@ All rendering state is repeated from the call time.
 - do the recordings need to be Canvas dependent?
 - do they need to be frozen?
 - can they be transfered?
+- should they be on the global namespace? create vs new?
 
 
 Example usage

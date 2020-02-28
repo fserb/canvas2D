@@ -38,9 +38,9 @@ The `drawParameters` is interepreted as a sequence of draw commands, where each 
 
 - `drawImageSrcDestBatch`
 
-  8 values per draw `sx, sy, swidth, sheight, dwidth, dheight`.
+  8 values per draw `sx, sy, swidth, sheight, dx, dy, dwidth, dheight`.
 
-  Equivalent to `drawImage(source, sx, sy, swidth, sheight, dwidth, dheight)`.
+  Equivalent to `drawImage(source, sx, sy, swidth, sheight, dx, dy, dwidth, dheight)`.
 
 - `drawImageTransformBatch`
 

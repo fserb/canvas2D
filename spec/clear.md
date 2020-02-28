@@ -33,6 +33,8 @@ stack empty.
 
 ### Open issues and questions
 
+- support a optional color parameter
+
 
 Example usage
 -------------

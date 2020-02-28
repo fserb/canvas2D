@@ -29,6 +29,7 @@ If `radius.length == 4` then each corner is specified, in order: top left, top r
 
 - is `clearRoundRect` needed/desired/possible?
 - is `sequence<double>` better than explicit list of radii?
+- support integer as an optional parameter
 - what happens to other radius lengths?
 
 
