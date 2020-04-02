@@ -32,13 +32,13 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-const grad = ctx.createConicGradient(100, 100, Math.PI/4);
+const grad = ctx.createConicGradient(100, 100, 0);
 
-grad.addStop(0, "orange");
-grad.addStop(0.25, "yellow");
-grad.addStop(0.5, "green");
-grad.addStop(0.75, "blue");
-grad.addStop(1, "red");
+grad.addStop(0, "red");
+grad.addStop(0.25, "orange");
+grad.addStop(0.5, "yellow");
+grad.addStop(0.75, "green");
+grad.addStop(1, "blue");
 
 ctx.fillStyle = grad;
 ctx.fillRect(0, 0, 200, 200);
