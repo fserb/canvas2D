@@ -29,10 +29,12 @@ When the user agent detects that the backing storage associated with a Canvas2D 
     2. If the event's canceled flag is not set, abort these steps.
     3. Queue a task to restore the backing buffer for context.
 
+UA could add support for "context loss test" by creating a
+`console.resetGraphicsContext()` method.
+
 ### Open issues and questions
 
 - Deprecate `webglcontextlost` in favor of `contextlost`?
-- How to force a context loss for test, as WebGL allows?
 - What the default behavior should be?
 
 Example usage
