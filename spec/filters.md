@@ -14,16 +14,32 @@ Proposal
 ```webidl
 // Parent class for filter primitives
 interface CanvasFilterPrimitive {}
+// For the lighting primitives 
+interface CanvasLightingPrimitive {}
 
 interface mixin CanvasFilter {
   // Defines functions that call constructors of primitives
-  GaussianBlur(double stdDeviation = 1);
+  Blend(CanvasImageSource image, DOMString mode);
+  ColorMatrix(DOMString type, DOMMatrix values);
+  ComponentTransfer();
+  Composite(CanvasImageSource image, DOMString operation);
+  ConvolveMatrix();
+  DiffuseLighting(double surfaceScale = 1, double diffuseConstant = 1);
   DisplacementMap(CanvasImageSource map, double strength = 1);
+  Flood(); // Can we do color as a ctor arg?
+  GaussianBlur(double stdDeviation = 1);
+  // Image is not necessary, I think
+  Merge(CanvasImageSource image);
+  Morphology(DOMString operator, double radius);
+  Offset(double dx, double dy);
+  SpecularLighting(); // Again, color makes ctor arguments iffy
+  Tile(double x, double y, double width, double height);
   Turbulence(double baseFrequency = 1, double numOctaves = 1);
-  Blend(DOMString mode = "normal");
-  ColorMatrix(DOMString type = "matrix", DOMMatrix values);
-  DiffuseLighting(double surfaceScale = 1, double diffuseConstant = 1);a
-  // ...etc for other svg filter types
+
+  // Lighting CanvasLightingPrimitives
+  DistantLight(double azimuth = 0, double elevation = 0);
+  PointLight(double x = 0, double y = 0, double z = 0);
+  SpotLight(double x = 0, double y = 0, double z = 0);
 
   // The wrapper function
   Sequence(CanvasFilterPrimitive[]);
@@ -32,25 +48,127 @@ interface mixin CanvasFilter {
 CanvasRenderingContext2D includes CanvasFilter;
 OffscreenCanvasRenderingContext2D includes CanvasFilter;
 
-// And each primitive must be defined individually
-
-interface GaussianBlur : CanvasFilterPrimitive {
-  constructor(double stdDeviation = 1);
-  attribute double stdDeviation;
+// Primitive definitions
+interface Blend : CanvasFilterPrimitive {
+  constructor(CanvasImageSource image, DOMString mode);
+  attribute CanvasImageSource image,
+  attribute DOMString mode;
 }
-interface DisplacementMap : CanvasFilterPrimitive {
+interface ColorMatrix : CanvasFilterPrimitive {
+  constructor(DOMString type, DOMMatrix values);
+  attribute DOMString mode;
+  attribute DOMMatrix values;
+}
+interface ComponentTransfer : CanvasFilterPrimitive {
+  attribute CanvasComponentTransferFunction funcR;
+  attribute CanvasComponentTransferFunction funcG;
+  attribute CanvasComponentTransferFunction funcB;
+  attribute CanvasComponentTransferFunction funcA;
+}
+interface Composite : CanvasFilterPrimitive {
+  constructor(CanvasImageSource image, DOMString operation);
+  attribute CanvasImageSource image;
+  attribute DOMString operation;
+}
+interface ConvolveMatrix : CanvasFilterPrimitive {
+  attribute attribute unsigned int orderX;
+  attribute attribute unsigned int orderY;
+  attribute DOMMatrix kernelMatrix;
+  attribute double divisor;
+  attribute double bias;
+  attribute int targetX;
+  attribute int targetY;
+  attribute DOMString edgeMode;
+  attribute double kernelUnitLengthX;
+  attribute double kernelUnitLengthY;
+  attribute bool preserveAlpha;
+}
+interface DiffuseLighting : CanvasFilterPrimitive {
+  constructor(double surfaceScale = 1, double diffuseConstant = 1);
+  attribute CanvasLightingPrimitive light;
+  attribute double surfaceScale;
+  attribute double diffuseConstant;
+}
+interface DisplacementMap : CanvasFilterPrimitive{
   constructor(CanvasImageSource map, double strength = 1);
   attribute CanvasImageSource map;
   attribute double strength;
 }
+interface Flood : CanvasFilterPrimitive{
+  attribute (DOMString or CanvasGradient or CanvasPattern) color;
+  attribute double opacity;
+}
+interface GaussianBlur : CanvasFilterPrimitive {
+  constructor(double stdDeviation = 1);
+  attribute double stdDeviation;
+}
+interface Merge : CanvasFilterPrimitive {
+  constructor(CanvasImageSource image);
+  attribute CanvasImageSource image;
+}
+interface Morphology : CanvasFilterPrimitive {
+  constructor(DOMString operator, double radius);
+  attribute DOMString operator;
+  attribute double radius;
+}
+interface Offset : CanvasFilterPrimitive {
+  constructor(double dx, double dy);
+  attribute double dx;
+  attribute double dy;
+}
+interface SpecularLighting : CanvasFilterPrimitive {
+  attribute double surfaceScale;
+  attribute double specularConstant;
+  attribute double specularExponent;
+  attribute double kernelUnitLength;
+  attribute (DOMString or CanvasGradient or CanvasPattern) color; 
+  attribute CanvasLightingPrimitive light;
+}
+interface Tile : CanvasFilterPrimitive {
+  constructor(double x, double y, double width, double height);
+  attribute double x;
+  attribute double y;
+  attribute double width;
+  attribute double height;
+}
 interface Turbulence : CanvasFilterPrimitive {
-  constructor(double baseFrequency = 1, double numOctave = 1);
+  constructor(double baseFrequency = 1, double numOctaves = 1);
   attribute double baseFrequency;
   attribute double numOctaves;
+  attribute double seed = 0;
+  attribute DOMString stitchTiles = "noStitch";
+  attribute DOMString type = "turbulence";
 }
-//  ...etc for other primitives, including: Blend, ColorMatrix,
-// ComponentTransfer, Composite, ConvolveMatrix, DiffuseLighting, DropShadow,
-// Flood, Image, Merge, Morphology, Offset, SpecularLighting, Tile
+
+// Lights
+interface DistantLight : CanvasLightingPrimitive {
+  constructor(double azimuth = 0, double elevation = 0);
+  attribute double azimuth;
+  attribute double elevation;
+}
+interface PointLight : CanvasLightingPrimitive {
+  constructor(double x = 0, double y = 0, double z = 0);
+  attribute double x;
+  attribute double y;
+  attribute double z;
+}
+interface SpotLight : CanvasLightingPrimitive {
+  constructor(double x = 0, double y = 0, double z = 0);
+  attribute double x;
+  attribute double y;
+  attribute double z;
+}
+
+// Component transfer functions are their own thing
+interface CanvasComponentTransferFunction {
+  attribute DOMString type;
+  attribute DOMString tableValues;
+  attribute double slope;
+  attribute double intercept;
+  attribute double amplitude;
+  attribute double exponent;
+  attribute double offset;
+}
 
 // Finally, the sequence object
 interface Sequence {
@@ -70,8 +188,9 @@ interface Sequence {
 - How should we handle 'SrcAlpha' type inputs?
 - Will it be hard to keep track of filter-stages inputs and outputs with this
 interface?
-- Are the lighting operations possible?
-- make filters immutable.
+- Make filters immutable. What about an `update()` function?
+- Should they not take args in the ctor?
+- Lighting primitives are parents of lights, is that appropriate?
 
 Example usage
 -------------
@@ -81,7 +200,7 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-// Create filter primatives
+// Create filter primitives
 const turbulence = new CanvasFilter.Turbulence(
   0.05 /* base frequency */, 2 /* numOctaves */);
 const displacementMap = new CanvasFilter.DisplacementMap(
@@ -108,6 +227,9 @@ ctx.fillRect(10, 10, 300, 200);
 // Modify filter
 turbulence.baseFrequency = 1.5; // Denser noise pattern
 blur.stdDeviation = 0.5; // Less blur
+
+ctx.filter = new CanvasFilter.Sequence([displacementMap, blur]);
+// or, with an update function, just ctx.filter.update()
 
 // Draw on top with modified filter
 ctx.fillStyle = "cyan";
@@ -167,6 +289,7 @@ ctx.fillRect(10, 10, 300, 200);
 // Modify filter
 turbulence.baseFrequency = 1.5; // Denser noise pattern
 blur.stdDeviation = 0.5; // Less blur
+ctx.filter.update();
 
 // Draw on top with modified filter
 ctx.fillStyle = "cyan";
