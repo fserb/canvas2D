@@ -71,13 +71,13 @@ interface Composite : CanvasFilterPrimitive {
   attribute DOMString operation;
 }
 interface ConvolveMatrix : CanvasFilterPrimitive {
-  attribute attribute unsigned int orderX;
-  attribute attribute unsigned int orderY;
+  attribute attribute unsigned short orderX;
+  attribute attribute unsigned short orderY;
   attribute DOMMatrix kernelMatrix;
   attribute double divisor;
   attribute double bias;
-  attribute int targetX;
-  attribute int targetY;
+  attribute short targetX;
+  attribute short targetY;
   attribute DOMString edgeMode;
   attribute double kernelUnitLengthX;
   attribute double kernelUnitLengthY;
