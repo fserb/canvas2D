@@ -34,13 +34,15 @@ interface mixin CanvasFilter {
   Tile(double x, double y, double width, double height);
   Turbulence(double baseFrequency = 1, double numOctaves = 1);
 
-  // Lighting primatives
+  // The wrapper function
+  Sequence(CanvasFilterPrimitive[]);
+}
+
+interface mixin CanvasFilterLight {
+  // Lighting CanvasLightingPrimitives
   DistantLight(double azimuth = 0, double elevation = 0);
   PointLight(double x = 0, double y = 0, double z = 0);
   SpotLight(double x = 0, double y = 0, double z = 0);
-
-  // The wrapper function
-  Sequence(CanvasFilterPrimitive[]);
 }
 
 CanvasRenderingContext2D includes CanvasFilter;
@@ -65,6 +67,7 @@ interface Composite : CanvasFilterPrimitive {
 }
 interface DiffuseLighting : CanvasFilterPrimitive {
   constructor(double surfaceScale = 1, double diffuseConstant = 1);
+  attribute CanvasLightingPrimitive light;
   attribute double surfaceScale;
   attribute double diffuseConstant;
 }
@@ -103,6 +106,7 @@ interface SpecularLighting : CanvasFilterPrimitive {
   attribute double specularExponent;
   attribute double kernelUnitLength;
   attribute (DOMString or CanvasGradient or CanvasPattern) color; 
+  attribute CanvasLightingPrimitive light;
 }
 interface Tile : CanvasFilterPrimitive {
   constructor(double x, double y, double width, double height);
@@ -120,6 +124,24 @@ interface Turbulence : CanvasFilterPrimitive {
   attribute DOMString type = "turbulence";
 }
 
+// Lights
+interface DistantLight : CanvasLightingPrimitive {
+  constructor(double azimuth = 0, double elevation = 0);
+  attribute double azimuth;
+  attribute double elevation;
+}
+interface PointLight : CanvasLightingPrimitive {
+  constructor(double x = 0, double y = 0, double z = 0);
+  attribute double x;
+  attribute double y;
+  attribute double z;
+}
+interface SpotLight : CanvasLightingPrimitive {
+  constructor(double x = 0, double y = 0, double z = 0);
+  attribute double x;
+  attribute double y;
+  attribute double z;
+}
 
 // Finally, the sequence object
 interface Sequence {
@@ -142,6 +164,7 @@ interface?
 - Are the lighting operations possible?
 - Make filters immutable. What about an `update()` function?
 - Should they not take args in the ctor?
+- Lighting primitives are parents of lights, is that appropriate?
 
 Example usage
 -------------
@@ -151,7 +174,7 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-// Create filter primatives
+// Create filter primitives
 const turbulence = new CanvasFilter.Turbulence(
   0.05 /* base frequency */, 2 /* numOctaves */);
 const displacementMap = new CanvasFilter.DisplacementMap(
@@ -178,6 +201,9 @@ ctx.fillRect(10, 10, 300, 200);
 // Modify filter
 turbulence.baseFrequency = 1.5; // Denser noise pattern
 blur.stdDeviation = 0.5; // Less blur
+
+ctx.filter = new CanvasFilter.Sequence([displacementMap, blur]);
+// or, with an update function, just ctx.filter.update()
 
 // Draw on top with modified filter
 ctx.fillStyle = "cyan";
