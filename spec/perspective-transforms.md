@@ -40,7 +40,7 @@ Finally, we support `scale`/`translate`/`rotate` with extra optional parameters.
 * update `transform()` with open parameters `(a, b, c, d, e, f, g, h...)`?
 * scale3d/translate3d/rotate3d/perspective (like CSS)?
 * do we need to specify non-affine perspective texture transforms for drawImage?
-
+* support pre-multiply for transform?
 
 Example usage
 -------------
