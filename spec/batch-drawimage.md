@@ -12,10 +12,11 @@ Proposal
 
 ```webidl
 interface mixin CanvasDrawImageBatch {
-  void drawImagePositionBatch(CanvasImageSource source, Float32Array drawParameters);
-  void drawImageDestRectBatch(CanvasImageSource source, Float32Array drawParameters);
-  void drawImageSrcDestBatch(CanvasImageSource source, Float32Array drawParameters);
-  void drawImageTransformBatch(CanvasImageSource source, Float32Array drawParameters);
+  void drawImagePositionBatch(CanvasImageSource source, (Float32Array or sequence<double>) drawParameters);
+  void drawImageDestRectBatch(CanvasImageSource source, (Float32Array or sequence<double>) drawParameters);
+  void drawImageSrcDestBatch(CanvasImageSource source, (Float32Array or sequence<double>) drawParameters);
+  void drawImageTransformBatch(CanvasImageSource source, (Float32Array or sequence<double>) drawParameters);
+  void drawImage3DTransformBatch(CanvasImageSource source, (Float32Array or sequence<double>) drawParameters);
 };
 
 CanvasRenderingContext2D includes CanvasDrawImageBatch;
@@ -47,6 +48,12 @@ The `drawParameters` is interepreted as a sequence of draw commands, where each 
   10 values per draw `sx, sy, swidth, sheight, a, b, c, d, e, f`.
 
   Equivalent to `save(); transform(a, b, c, d, e, f); drawImage(sx, sy, swidth, sheight, 0, 0, 1, 1); restore();`
+
+- `drawImage3DTransformBatch`
+
+  20 values per draw `sx, sy, swidth, sheight, m11...m44`.
+
+  Equivalent to `save(); transform(DOMMatrix(m11...m44)); drawImage(sx, sy, swidth, sheight, 0, 0, 1, 1); restore();`
 
 
 Throws an `INDEX_SIZE_ERR` DOM Exception if the size of `drawParameters` is not a mulitple of the required length.
