@@ -1,4 +1,4 @@
-Perpsective transforms
+Perspective transforms
 ======================
 **Status**: explainer.
 

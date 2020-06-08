@@ -20,8 +20,6 @@ Feature list
 
 - [**RoundRect**](spec/roundrect.md). Draw primitive.
 
-- [**Conic curves**](spec/conic-curve-to.md). Draw primitive.
-
 - [**Perspective transforms**](spec/perspective-transforms.md). Allow for perspective transforms Canvas 2D rendering. Support 4x4 transform matrices.
 
 - [**Conic Gradient**](spec/conic-gradient.md). Draw primitive.
@@ -33,6 +31,8 @@ Future ideas
 ------------
 
 - [**Recorded pictures**](spec/recording.md). Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
+
+- [**Conic curves**](spec/conic-curve-to.md). Draw primitive.
 
 - **Batch text rendering**.
 
