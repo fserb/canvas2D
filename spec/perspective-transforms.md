@@ -6,6 +6,13 @@ Allow for perspective (non-affine) 2D transforms. Non-affine transforms are
 transformations where parallel lines don't remain parallel after the transform.
 
 
+Rationale
+---------
+
+Non-affine/perspective transforms are supported on all major 2D APIs (either directly or throught filters). For flat fill, it can be replaced by regular paths. Unfortunately, this doesn't work for drawImages, where non-affine transform need to be applied to the render.
+
+The use cases include effects rendering images with flipping and perspective effects.
+
 Proposal
 --------
 

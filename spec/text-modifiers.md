@@ -9,6 +9,14 @@ canvas. This spec tries to bring those properties inside canvas.
 Those should be trivially implemented, as they are already support by CSS.
 
 
+Rationale
+---------
+
+There are many applications that want to use more modern text parameters that browsers current support but are not available on Canvas.
+
+There are many web apps (from Adobe, Microsoft, Google) that are looking forward for this feature.
+
+
 Proposal
 --------
 

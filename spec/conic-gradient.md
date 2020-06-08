@@ -7,6 +7,12 @@ Adds conic gradients.
 This is equivalent to CSS's `conic-gradient()` function.
 
 
+Rationale
+---------
+
+This is currently available on CSS.
+
+
 Proposal
 --------
 

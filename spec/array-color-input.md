@@ -5,6 +5,13 @@ Array color input
 Allow RGB and RGBA colors to be specified by a sequence of floats.
 
 
+Rationale
+---------
+
+The current way to set colors forces developers to build strings, that then are parsed into values.
+This is a quality of life change.
+
+
 Proposal
 --------
 
@@ -39,7 +46,6 @@ Alpha is clamped to `[0, 1]`.
 ### Open issues and questions
 
 - Is it possible or desired to support other formats like YUV?
-- Are UA allowed to use more than 255 values for colors?
 
 Example usage
 -------------

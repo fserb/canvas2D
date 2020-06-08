@@ -6,6 +6,12 @@ Canvas context loss
 2D Canvas Rendering contexts are currently required to have persistent backing stores. This proposal aims to relax that requirement by introducing an API that allows canvases to be discarded by the browser and re-drawn by the web application on demand.
 
 
+Rationale
+---------
+
+This is a long standing [request](https://github.com/whatwg/html/issues/4809) from developers. It's particularly useful on Mobile, where context lost is more common.
+
+
 Proposal
 --------
 

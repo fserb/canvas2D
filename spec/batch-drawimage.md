@@ -7,6 +7,15 @@ Many web applications use `Canvas2D.drawImage` in sequence, where a large number
 - near-native performance for sprite/tile based animation and games.
 - easily polyfilled.
 
+
+Rationale
+---------
+
+Batch image render is an expected and commom 2D API pattern. Usually, those functions exist to improve performance (by increasing max number of sprites to be rendered) due to pipelininig benefits. On top of that, Canvas2D can benefit for also reducing the number of Javascript calls necessary per blit.
+
+Experiments have shown that `drawImage*Batch` can improve Canvas2D sprite rendering performance in the browser by at least 3-5x.
+
+
 Proposal
 --------
 

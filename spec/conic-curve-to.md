@@ -3,8 +3,15 @@ ConicCurveTo
 **Status**: explainer.
 
 Draw curves based on conic sections. These are useful as they can represent
-circular, elliptical and hyperbolic paths whereas bezier 
+circular, elliptical and hyperbolic paths whereas bezier
 curves are limited to quadratic arcs.
+
+
+Rationale
+---------
+
+Conic curves are lower level primitives to beziers. They allow a better description of more times of curves.
+
 
 Proposal
 --------
@@ -30,7 +37,7 @@ Fig 1 - Points on a conic curve [Source](http://www.cs.mtu.edu/~shene/COURSES/cs
    - `weight = 1` defines a quadratic path.
    - `weight < 1` is elliptical, while `weight > 1` is hyperbolic.
    - `weight = infinity` essentially makes two line segments _P0P1_ and _P1P2_.
-   
+
 If _P0_, _P1_ and _P2_ are all the corners of a square, then `weight = sqrt(2)/2` defines a circular arc. This can be used for rounded corners.
 
 The mathematical derivation of these quantities can be found [here](http://www.cs.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/NURBS/RB-conics.html).

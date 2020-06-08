@@ -4,13 +4,19 @@ clear function
 
 Provide a `clear()` function that resets the state of the Canvas.
 
+
+Rationale
+---------
+
 Currently, there's no canonical way of clearing a Canvas, some of the used
 ways are actually wrong, and users are overall [confused](https://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing) about it. Current ways of clearing a canvas:
 
 1. `ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);` is wrong, as it doesn't reset the path.
 2. `ctx.fillStyle = "white"; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);` can lead to performance issues.
-3. `ctx.canvas.width = ctx.canvas.width` clears the canvas, but also resets style.
+3. `ctx.canvas.width = ctx.canvas.width` clears the canvas, but also resets style. Very opaque.
 4. `ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.beginPath();` is the only good way of doing so.
+
+This is a small quality of life improvement.
 
 
 Proposal

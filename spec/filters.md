@@ -8,13 +8,22 @@ The SVG filter exposes deep, flexible drawing modifiers for 2d graphics.
 Integrating these into canvas 2d should be technically feasible once an
 interface is defined.
 
+
+Rationale
+---------
+
+A strong filter library is available on all major 2D APIs. A lot of those filters are currently implemented inderectly by Canvas2D supporting URL filters (but not on OffscreenCanvas).
+
+This proposal tries to build up the basis for having more interesting filters available directly on canvas, programatically.
+
+
 Proposal
 --------
 
 ```webidl
 // Parent class for filter primitives
 interface CanvasFilterPrimitive {}
-// For the lighting primitives 
+// For the lighting primitives
 interface CanvasLightingPrimitive {}
 
 interface mixin CanvasFilter {
@@ -121,7 +130,7 @@ interface SpecularLighting : CanvasFilterPrimitive {
   attribute double specularConstant;
   attribute double specularExponent;
   attribute double kernelUnitLength;
-  attribute (DOMString or CanvasGradient or CanvasPattern) color; 
+  attribute (DOMString or CanvasGradient or CanvasPattern) color;
   attribute CanvasLightingPrimitive light;
 }
 interface Tile : CanvasFilterPrimitive {

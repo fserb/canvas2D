@@ -5,6 +5,14 @@ RoundRect
 Allows to render rectangles with rounded corners.
 
 
+Rationale
+---------
+
+Almost all 2D APIs support a roundrect primitive.
+
+Even thought, theoretically, one could reproduce this with paths, it's hard to get this function right (with weird values of radius) and performant.
+
+
 Proposal
 --------
 
