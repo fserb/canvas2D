@@ -6,8 +6,6 @@ This repo contains proposal for an updated version of the [Canvas 2D API](https:
 Feature list
 ------------
 
-- [**Batch drawImage**](spec/batch-drawimage.md). Support for multiple images being drawn within a single API call.
-
 - [**Canvas context loss**](spec/context-loss.md). Allow canvas to be discarded and re-drawn by demand.
 
 - [**willReadFrequently**](spec/will-read-frequently.md). context creation attribute.
@@ -29,6 +27,8 @@ Feature list
 
 Future ideas
 ------------
+
+- [**Batch drawImage**](spec/batch-drawimage.md). Support for multiple images being drawn within a single API call.
 
 - [**Recorded pictures**](spec/recording.md). Create a record object that receives all the commands from a Canvas2D and can be replayed multiple times.
 
