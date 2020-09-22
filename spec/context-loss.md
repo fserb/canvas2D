@@ -1,4 +1,4 @@
-Canvas context loss
+Canvas context loss and context restored
 ===================
 **Status**: explainer.
 
@@ -32,8 +32,9 @@ When the user agent detects that the backing storage associated with a Canvas2D 
 3. Set *context lost* flag.
 4. Queue a task to perform the following steps:
     1. Fire a event `contextlost` at *canvas*
-    2. If the event's canceled flag is not set, abort these steps.
+    2. If the event's canceled flag is set, abort these steps. The backing buffer for the context will not be restored.
     3. Queue a task to restore the backing buffer for context.
+	4. Fire a event `contextrestored` at *canvas* on completion of that task.
 
 UA could add support for "context loss test" by creating a
 `console.resetGraphicsContext()` method.
@@ -41,7 +42,10 @@ UA could add support for "context loss test" by creating a
 ### Open issues and questions
 
 - Deprecate `webglcontextlost` in favor of `contextlost`?
+- Deprecate `webglcontextrestored` in favor of `contextrestored`?
 - What the default behavior should be?
+- Currently the canvas has to be modified in order for context lost/restored events to fire. Is that the right behavior?
+- The canvas has to be in the DOM and also visible in order for context lost/restored events to fire. Is that the right behavior?
 
 Example usage
 -------------
@@ -51,6 +55,7 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
 canvas.addEventListener("contextlost", redraw);
+canvas.addEventListener("contextrestored", redraw);
 ```
 
 
