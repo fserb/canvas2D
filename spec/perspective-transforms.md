@@ -29,7 +29,7 @@ interface mixin CanvasTransform {
   void scale(unrestricted double x, unrestricted double y, optional unrestricted double z);
   void translate(unrestricted double x, unrestricted double y, optional unrestricted double z);
   void rotate3d(unrestricted double angleZ, optional unrestricted double angleY, optional unrestricted dobule angleX);
-  void rotateAxisAngle(unrestricted double axisX, unrestricted double axisY, unrestricted double axisZ, unrestricted double angle);
+  void rotateAxis(unrestricted double axisX, unrestricted double axisY, unrestricted double axisZ, unrestricted double angle);
 
   void setTransform(optional (DOMMatrix2DInit or DOMMatrixInit) transform = {});
   void transform((DOMMatrix2DInit or DOMMatrixInit transform);
