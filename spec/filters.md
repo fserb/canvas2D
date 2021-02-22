@@ -8,7 +8,7 @@ The SVG filter exposes deep, flexible drawing modifiers for 2d graphics.
 Integrating these into canvas 2d should be technically feasible once an
 interface is defined.
 
-[Alternative usages](filter-usages.md)
+[Alternative usages](https://github.com/fserb/canvas2D/blob/master/spec/filters-usage.md)
 
 
 Rationale
