@@ -59,13 +59,16 @@ ctx.filter = CanvasFilter([{displacementMap: {
 MongoDB-like syntax
 -------------------
 ```js
-ctx.filter = [{displacementMap: {turbulence: [0.05, 2]}, {gaussianBlur: 2}];
+ctx.filter = new CanvasFilter([{displacementMap: {turbulence: [0.05, 2]}, {gaussianBlur: 2}]);
 
-ctx.filter = [
+ctx.filter = new CanvasFilter([
   {displacementMap: {
     strength: 30,
     map: {turbulence: {baseFrequency: 0.05, numOctaves: 2}},
-  {gaussianBlur: 2}];
+  {gaussianBlur: 2}]);
+  
+// single step version (no array)
+ctx.fitler = new CanvasFilter({gaussianBlur: 2});
 ```
 
 
