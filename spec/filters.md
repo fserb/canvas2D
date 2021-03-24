@@ -26,9 +26,11 @@ Proposal
 // CanvasFilter, exposed to window and workers
 // with generic objects we don't need to define every filter within idl files
 [
-    Exposed=(Window,Worker), RuntimeEnabled=NewCanvas2DAPI
+    Exposed=(Window,Worker)
 ] interface CanvasFilter {
+
     [CallWith=(ScriptState), RaisesException] constructor((object or FrozenArray<object>) init);
+    
 };
 ```
 
