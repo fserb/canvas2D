@@ -55,7 +55,7 @@ const ctx = canvas.getContext('2d');
 */
 
 // Definiing to a separate object will allow us to vary parameters
-let filterArray = [{turbulence: {frequency: 0.05, numOctaves: 2}},
+const filterArray = [{turbulence: {frequency: 0.05, numOctaves: 2}},
   {displacementMap: {in: "SourceGraphic", in2: "previous", scale: 30},
   {blur: {stdDeviation: 2}}];
 
@@ -67,8 +67,8 @@ ctx.fillStyle = "magenta";
 ctx.fillRect(10, 10, 300, 200);
 
 // Modify filter
-filterArray[2]['turbulence']['frequency'] = 1.5; // Denser noise pattern
-filterArray[3]['blur']['stdDeviation'] = 0.5; // Less blur
+filterArray[0]['turbulence']['frequency'] = 1.5; // Denser noise pattern
+filterArray[2]['blur']['stdDeviation'] = 0.5; // Less blur
 
 // Must construct a new filter object
 ctx.filter = new CanvasFilter(filterArray);
