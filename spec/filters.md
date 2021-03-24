@@ -23,185 +23,14 @@ Proposal
 --------
 
 ```webidl
-// Parent class for filter primitives
-interface CanvasFilterPrimitive {}
-// For the lighting primitives
-interface CanvasLightingPrimitive {}
-
-interface mixin CanvasFilter {
-  // Defines functions that call constructors of primitives
-  Blend(CanvasImageSource image, DOMString mode);
-  ColorMatrix(DOMString type, DOMMatrix values);
-  ComponentTransfer();
-  Composite(CanvasImageSource image, DOMString operation);
-  ConvolveMatrix();
-  DiffuseLighting(double surfaceScale = 1, double diffuseConstant = 1);
-  DisplacementMap(CanvasImageSource map, double strength = 1);
-  Flood(); // Can we do color as a ctor arg?
-  GaussianBlur(double stdDeviation = 1);
-  // Image is not necessary, I think
-  Merge(CanvasImageSource image);
-  Morphology(DOMString operator, double radius);
-  Offset(double dx, double dy);
-  SpecularLighting(); // Again, color makes ctor arguments iffy
-  Tile(double x, double y, double width, double height);
-  Turbulence(double baseFrequency = 1, double numOctaves = 1);
-
-  // Lighting CanvasLightingPrimitives
-  DistantLight(double azimuth = 0, double elevation = 0);
-  PointLight(double x = 0, double y = 0, double z = 0);
-  SpotLight(double x = 0, double y = 0, double z = 0);
-
-  // The wrapper function
-  Sequence(CanvasFilterPrimitive[]);
-}
-
-CanvasRenderingContext2D includes CanvasFilter;
-OffscreenCanvasRenderingContext2D includes CanvasFilter;
-
-// Primitive definitions
-interface Blend : CanvasFilterPrimitive {
-  constructor(CanvasImageSource image, DOMString mode);
-  attribute CanvasImageSource image,
-  attribute DOMString mode;
-}
-interface ColorMatrix : CanvasFilterPrimitive {
-  constructor(DOMString type, DOMMatrix values);
-  attribute DOMString mode;
-  attribute DOMMatrix values;
-}
-interface ComponentTransfer : CanvasFilterPrimitive {
-  attribute CanvasComponentTransferFunction funcR;
-  attribute CanvasComponentTransferFunction funcG;
-  attribute CanvasComponentTransferFunction funcB;
-  attribute CanvasComponentTransferFunction funcA;
-}
-interface Composite : CanvasFilterPrimitive {
-  constructor(CanvasImageSource image, DOMString operation);
-  attribute CanvasImageSource image;
-  attribute DOMString operation;
-}
-interface ConvolveMatrix : CanvasFilterPrimitive {
-  attribute attribute unsigned short orderX;
-  attribute attribute unsigned short orderY;
-  attribute DOMMatrix kernelMatrix;
-  attribute double divisor;
-  attribute double bias;
-  attribute short targetX;
-  attribute short targetY;
-  attribute DOMString edgeMode;
-  attribute double kernelUnitLengthX;
-  attribute double kernelUnitLengthY;
-  attribute bool preserveAlpha;
-}
-interface DiffuseLighting : CanvasFilterPrimitive {
-  constructor(double surfaceScale = 1, double diffuseConstant = 1);
-  attribute CanvasLightingPrimitive light;
-  attribute double surfaceScale;
-  attribute double diffuseConstant;
-}
-interface DisplacementMap : CanvasFilterPrimitive{
-  constructor(CanvasImageSource map, double strength = 1);
-  attribute CanvasImageSource map;
-  attribute double strength;
-}
-interface Flood : CanvasFilterPrimitive{
-  attribute (DOMString or CanvasGradient or CanvasPattern) color;
-  attribute double opacity;
-}
-interface GaussianBlur : CanvasFilterPrimitive {
-  constructor(double stdDeviation = 1);
-  attribute double stdDeviation;
-}
-interface Merge : CanvasFilterPrimitive {
-  constructor(CanvasImageSource image);
-  attribute CanvasImageSource image;
-}
-interface Morphology : CanvasFilterPrimitive {
-  constructor(DOMString operator, double radius);
-  attribute DOMString operator;
-  attribute double radius;
-}
-interface Offset : CanvasFilterPrimitive {
-  constructor(double dx, double dy);
-  attribute double dx;
-  attribute double dy;
-}
-interface SpecularLighting : CanvasFilterPrimitive {
-  attribute double surfaceScale;
-  attribute double specularConstant;
-  attribute double specularExponent;
-  attribute double kernelUnitLength;
-  attribute (DOMString or CanvasGradient or CanvasPattern) color;
-  attribute CanvasLightingPrimitive light;
-}
-interface Tile : CanvasFilterPrimitive {
-  constructor(double x, double y, double width, double height);
-  attribute double x;
-  attribute double y;
-  attribute double width;
-  attribute double height;
-}
-interface Turbulence : CanvasFilterPrimitive {
-  constructor(double baseFrequency = 1, double numOctaves = 1);
-  attribute double baseFrequency;
-  attribute double numOctaves;
-  attribute double seed = 0;
-  attribute DOMString stitchTiles = "noStitch";
-  attribute DOMString type = "turbulence";
-}
-
-// Lights
-interface DistantLight : CanvasLightingPrimitive {
-  constructor(double azimuth = 0, double elevation = 0);
-  attribute double azimuth;
-  attribute double elevation;
-}
-interface PointLight : CanvasLightingPrimitive {
-  constructor(double x = 0, double y = 0, double z = 0);
-  attribute double x;
-  attribute double y;
-  attribute double z;
-}
-interface SpotLight : CanvasLightingPrimitive {
-  constructor(double x = 0, double y = 0, double z = 0);
-  attribute double x;
-  attribute double y;
-  attribute double z;
-}
-
-// Component transfer functions are their own thing
-interface CanvasComponentTransferFunction {
-  attribute DOMString type;
-  attribute DOMString tableValues;
-  attribute double slope;
-  attribute double intercept;
-  attribute double amplitude;
-  attribute double exponent;
-  attribute double offset;
-}
-
-// Finally, the sequence object
-interface Sequence {
-  /*
-    The implementation of this constructor will turn all unused inputs (i.e.
-    first primitives on the filter chain) into drawOp inputs. Every filter
-    primitive in the array will be chained with the following one. The final
-    stage will be the output.
-  */
-  constructor(CanvasFilterPrimitives[]);
-}
+// CanvasFilter, exposed to window and workers
+// with generic objects we don't need to define every filter within idl files
+[
+    Exposed=(Window,Worker), RuntimeEnabled=NewCanvas2DAPI
+] interface CanvasFilter {
+    [CallWith=(ScriptState), RaisesException] constructor((object or FrozenArray<object>) init);
+};
 ```
-
-### Open issues and questions
-
-- Is having constructors for other objects possible in `.idl` files?
-- How should we handle 'SrcAlpha' type inputs?
-- Will it be hard to keep track of filter-stages inputs and outputs with this
-interface?
-- Make filters immutable. What about an `update()` function?
-- Should they not take args in the ctor?
-- Lighting primitives are parents of lights, is that appropriate?
 
 Example usage
 -------------
@@ -210,13 +39,6 @@ Example usage
 // Javascript example
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
-
-// Create filter primitives
-const turbulence = new CanvasFilter.Turbulence(
-  0.05 /* base frequency */, 2 /* numOctaves */);
-const displacementMap = new CanvasFilter.DisplacementMap(
-  turbulence /* displacement map */, 30 /* strength */);
-const blur = new CanvasFilter.GaussianBlur(2 /* std deviation */);
 
 /*
   Create overall filter, the first primitive will get drawing operations as input
@@ -229,18 +51,25 @@ const blur = new CanvasFilter.GaussianBlur(2 /* std deviation */);
                               |
   canvasDrawOps -----> displacementMap -------> blur ------> screen
 */
-ctx.filter = new CanvasFilter.Sequence([displacementMap, blur]);
+
+// Definiing to a separate object will allow us to vary parameters
+let filterArray = [{turbulence: {frequency: 0.05, numOctaves: 2}},
+  {displacementMap: {in: "SourceGraphic", in2: "previous", scale: 30},
+  {blur: {stdDeviation: 2}}];
+
+// Construct the canvas filter
+ctx.filter = new CanvasFilter(filterArray);
 
 // Draw with created filter
 ctx.fillStyle = "magenta";
 ctx.fillRect(10, 10, 300, 200);
 
 // Modify filter
-turbulence.baseFrequency = 1.5; // Denser noise pattern
-blur.stdDeviation = 0.5; // Less blur
+filterArray[2]['turbulence']['frequency'] = 1.5; // Denser noise pattern
+filterArray[3]['blur']['stdDeviation'] = 0.5; // Less blur
 
-ctx.filter = new CanvasFilter.Sequence([displacementMap, blur]);
-// or, with an update function, just ctx.filter.update()
+// Must construct a new filter object
+ctx.filter = new CanvasFilter(filterArray);
 
 // Draw on top with modified filter
 ctx.fillStyle = "cyan";
