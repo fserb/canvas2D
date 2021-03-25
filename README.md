@@ -14,7 +14,7 @@ Feature list
 
 - [**Text modifiers**](spec/text-modifiers.md). CSS text/font properties on Canvas.
 
-- [**Clear function**](spec/clear.md). Draw primitive.
+- [**Reset function**](spec/reset.md). Draw primitive.
 
 - [**RoundRect**](spec/roundrect.md). Draw primitive.
 
