@@ -2,8 +2,7 @@ Array color input
 =================
 **Status**: explainer.
 
-Allow RGB and RGBA colors to be specified by a sequence of floats.
-
+Allow color input on canvas to use a CSSColorValue object.
 
 Rationale
 ---------
@@ -17,35 +16,21 @@ Proposal
 
 ```webidl
 interface mixin CanvasFillStrokeStyles {
-  attribute (DOMString or sequence<unrestricted double> or
+  attribute (DOMString or CSSColorValue or
     CanvasGradient or CanvasPattern) strokeStyle;
-  attribute (DOMString or sequence<unrestricted double> or
+  attribute (DOMString or CSSColorValue or
     CanvasGradient or CanvasPattern) fillStyle;
 };
 
 interface mixin CanvasShadowStyles {
-  attribute (DOMString or sequence<unrestricted double>) shadowColor;
+  attribute (DOMString or CSSColorValue) shadowColor;
 };
 
 interface CanvasGradient {
   void addColorStop(double offset, DOMString color);
-  void addColorStop(double offset, sequence<unrestricted double> color);
+  void addColorStop(double offset, CSSColorValue);
 }
 ```
-
-when a sequence is presented as any of the color parameters:
-1. if length is 3, parse as `[R, G, B]`
-2. if length is 4, parse as `[R, G, B, A]`
-3. else, do nothing.
-
-`R, G, B` are normalized from 255, i.e. `[1.0, 0.5, 0.0]` is equivalent to `rgb(255, 127, 0)`.
-
-Alpha is clamped to `[0, 1]`.
-
-
-### Open issues and questions
-
-- Is it possible or desired to support other formats like YUV?
 
 Example usage
 -------------
@@ -55,8 +40,8 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-ctx.fillStyle = [0.2, 0.33, 0.1, 0.5];
-ctx.strokeStyle = [1.0, 0.0, 0.0];
+ctx.fillStyle = new CSSRGB(1, 0, 1, 0.5); // half-transparent magenta
+ctx.strokeStyle = new CSSHSL(0, 0.5, 1); // bright red
 ```
 
 Alternatives considered
@@ -64,10 +49,11 @@ Alternatives considered
 
 ### Include color format
 
-Allow sequences of type `['rgb', 0.5, 0.5, 0.5]` and allow other formats.
+Array color input `ctx.fillStyle = [0.5, 0.5, 0.5]` 
 
 
 References
 ----------
 
-None.
+ - [CSSColorValue](https://drafts.css-houdini.org/css-typed-om-1/#colorvalue-objects)
+ - [WHATWG discussion thread](https://github.com/whatwg/html/issues/5616)
