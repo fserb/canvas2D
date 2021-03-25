@@ -30,9 +30,10 @@ interface mixin CanvasTransform {
   void translate(unrestricted double x, unrestricted double y, optional unrestricted double z);
   void rotate3d(unrestricted double angleZ, optional unrestricted double angleY, optional unrestricted dobule angleX);
   void rotateAxis(unrestricted double axisX, unrestricted double axisY, unrestricted double axisZ, unrestricted double angle);
+  void perspective(unrestricted double length);
 
-  void setTransform(optional (DOMMatrix2DInit or DOMMatrixInit) transform = {});
-  void transform((DOMMatrix2DInit or DOMMatrixInit transform);
+  void setTransform(optional DOMMatrixInit transform = {});
+  void transform(DOMMatrixInit transform);
 };
 ```
 
@@ -45,8 +46,6 @@ Finally, we support `scale`/`translate`/`rotate` with extra optional parameters.
 
 ### Open issues and questions
 
-* update `transform()` with open parameters `(a, b, c, d, e, f, g, h...)`?
-* scale3d/translate3d/rotate3d/perspective (like CSS)?
 * do we need to specify non-affine perspective texture transforms for drawImage?
 * support pre-multiply for transform?
 
@@ -54,18 +53,25 @@ Example usage
 -------------
 
 ```js
-// Javascript example
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
+  // Javascript example, draws a trapezoid
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
-// TBD
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.fillStyle = "magenta";
+  ctx.fillRect(w/2 - 50, h/2 - 50, 100, 100);
+  ctx.fillStyle = "rgba(0, 2550, 255, 0.8)";
+  ctx.translate(w/2, h/2);
+  ctx.perspective(100);
+  ctx.rotate3d(1.0, 0, 0);
+  ctx.translate(-w/2, -h/2);
+  ctx.fillRect(w/2 - 50, h/2 - 50, 100, 100);
 ```
 
-Alternatives considered
------------------------
+The above code will produce the the following canvas:
 
-none
-
+![image](../images/perspective-canvas.png)
 
 References
 ----------
