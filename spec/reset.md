@@ -2,7 +2,7 @@ clear function
 ==============
 **Status**: explainer.
 
-Provide a `clear()` function that resets the state of the Canvas.
+Provide a `reset()` function that resets the state of the Canvas.
 
 
 Rationale
@@ -25,16 +25,16 @@ Proposal
 ```webidl
 interface CanvasRenderingContext2D {
   // extending original
-  void clear();
+  void reset();
 };
 
 interface OffscreenCanvasRenderingContext2D {
   // extending original
-  void clear();
+  void reset();
 };
 ```
 
-`clear()` resets the backing buffer, the current path and sets the transformation
+`reset()` clears the backing buffer to transparent black, the current path and sets the transformation
 stack empty.
 
 ### Open issues and questions
@@ -50,7 +50,7 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-ctx.clear();
+ctx.reset();
 ```
 
 Alternatives considered
