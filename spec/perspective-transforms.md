@@ -71,7 +71,7 @@ Example usage
 
 The above code will produce the the following canvas:
 
-![image](../images/perspective-canvas.png)
+![image](../images/perspective.png)
 
 References
 ----------
