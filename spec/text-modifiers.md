@@ -27,11 +27,9 @@ interface mixin CanvasTextDrawingStyles {
   // new values
   attribute DOMString textLetterSpacing;      // CSS letter-spacing
   attribute DOMString textWordSpacing;        // CSS word-spacing
-  attribute DOMString fontVariant;            // CSS font-variant
+  attribute DOMString fontVariantCaps;        // CSS font-variant-caps
   attribute DOMString fontKerning;            // CSS font-kerning
   attribute DOMString fontStretch;            // CSS font-stretch
-  attribute DOMString textDecoration;         // CSS text-decoration
-  attribute DOMString textUnderlinePosition;  // CSS text-underline-position
   attribute DOMString textRendering;          // CSS text-rendering
 };
 ```
@@ -52,7 +50,7 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
 ctx.textLetterSpacing = "3px";
-ctx.textDecoration = "underline";
+ctx.fontVariantCaps = "all-small-caps";
 
 ```
 
