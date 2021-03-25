@@ -1,4 +1,4 @@
-Array color input
+CSSColorValue color input
 =================
 **Status**: explainer.
 
