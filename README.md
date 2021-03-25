@@ -10,7 +10,7 @@ Feature list
 
 - [**willReadFrequently**](spec/will-read-frequently.md). context creation attribute.
 
-- [**Array color input**](spec/array-color-input.md). support for new color input on Canvas.
+- [**Color input**](spec/array-color-input.md). support for new color input on Canvas.
 
 - [**Text modifiers**](spec/text-modifiers.md). CSS text/font properties on Canvas.
 
