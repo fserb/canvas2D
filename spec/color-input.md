@@ -41,7 +41,7 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
 ctx.fillStyle = new CSSRGB(1, 0, 1, 0.5); // half-transparent magenta
-ctx.strokeStyle = new CSSHSL(0, 0.5, 1); // bright red
+ctx.strokeStyle = new CSSHSL(CSS.deg(0), 0.5, 1); // bright red
 ```
 
 Alternatives considered
