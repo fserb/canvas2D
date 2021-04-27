@@ -44,12 +44,32 @@ ctx.fillStyle = new CSSRGB(1, 0, 1, 0.5); // half-transparent magenta
 ctx.strokeStyle = new CSSHSL(CSS.deg(0), 0.5, 1); // bright red
 ```
 
+Notes on Workers
+----------------
+
+CSSColorValue types can take doubles or CSS unit values as inputs. The CSS namespace is not (yet) exposed to workers an there are some security concerns involved with doing so. For example, CSS.registerProperty unconditionally casts the ExecutionContext to LocalDOMWindow and then acts on it. This sort of type confusion is a common source of security vulnerability.
+
+We can instead expose only the CSS unit value types that can be used to create CSSColorValues, these include:
+  - CSS.percent
+  - CSS.number
+  - CSS.deg
+  - CSS.rad
+  - CSS.grad
+
+CSSUnitValue, CSSNumericValue and CSSStyleValue should also get exposed.
+
+We should also consider exposing:
+  - CSSMathSum
+  - CSSMathMin
+  - CSSMathProduct
+  - CSSMathMax
+
 Alternatives considered
 -----------------------
 
-### Include color format
+### Array color inpu
 
-Array color input `ctx.fillStyle = [0.5, 0.5, 0.5]` 
+`ctx.fillStyle = [0.5, 0.5, 0.5]` 
 
 
 References
