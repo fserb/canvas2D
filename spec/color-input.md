@@ -67,7 +67,7 @@ We should also consider exposing:
 Alternatives considered
 -----------------------
 
-### Array color inpu
+### Array color input
 
 `ctx.fillStyle = [0.5, 0.5, 0.5]` 
 
