@@ -3,6 +3,8 @@ Update Canvas 2D API
 
 This repo contains proposal for an updated version of the [Canvas 2D API](https://html.spec.whatwg.org/multipage/canvas.html), following a set of [rationales](rationale.md).
 
+[Explainer video](https://www.youtube.com/watch?v=dfOKFSDG7IM)
+
 Feature list
 ------------
 
