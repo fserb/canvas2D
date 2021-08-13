@@ -1,110 +1,51 @@
----
-recipe: api-interface
-title: 'CanvasRenderingContext2D.reset'
-mdn_url: /en-US/docs/Web/API/CanvasRenderingContext2D/reset
-specifications: https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-reset
-browser_compatibility: api.CanvasRenderingContext2D.reset
----
-
-
-**When this feature ships, the content below will live on MDN under
-[developer.mozilla.org/en-US/docs/Web/CanvasRenderingContext2D/reset](https://developer.mozilla.org/en-US/docs/Web/CanvasRenderingContext2D/reset).**
-
 ## Description
 
-The `reset()` method of the `CanvasRenderingContext2D` interface
-resets the rendering context to its default state. This includes setting all pixels in the canvas to transparent black, clearing any saved [states](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D#the_canvas_state), clearing any stored [path operations](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D#paths) and resetting the drawing state to its initial values.
+The `CanvasRenderingContext2D` interface of the [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) provides the 2D rendering context for the drawing surface of a `<canvas>` element. It is used for drawing shapes, text, images, and other objects.
 
-Drawing state consists of:
- - The current transformation matrix.
- - The current clipping region.
- - The current values of the following attributes: 
-    - `strokeStyle`
-    - `fillStyle`
-    - `globalAlpha`
-    - `lineWidth`
-    - `lineCap`
-    - `lineJoin`
-    - `miterLimit`
-    - `lineDashOffset`
-    - `shadowOffsetX`
-    - `shadowOffsetY`
-    - `shadowBlur`
-    - `shadowColor`
-    - `filter`
-    - `globalCompositeOperation`
-    - `font`
-    - `textAlign`
-    - `textBaseline`
-    - `direction`
-    - `textLetterSpacing`
-    - `textWordSpacing`
-    - `fontKerning`
-    - `fontStretch`
-    - `fontVariantCaps`
-    - `textRendering`
-    - `imageSmoothingEnabled`
-    - `imageSmoothingQuality`
- - The current dash list.
+**You can find [existing documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D) for this interface on MDN. Chrome's work on [New Canvas 2D API](https://www.chromestatus.com/feature/6051647656558592) adds the following members.**
 
-## Syntax
+## Properties
 
-`CanvasRenderingContext2D.reset();`
+**[`CanvasRenderingContext2D.fontKerning`](CanvasRenderingContext2D.fontKerning.md)**
 
-## Example
+Indicates whether kerning information stored in a font will be used. Kerning defines how letters are spaced. In well-kerned fonts, this feature makes character spacing appear to be more uniform and pleasant to read than it would otherwise be.
 
-```js
-const defaultFillStyle = ctx.fillStyle; // "#000000"
-const defaultStrokeStyle = ctx.strokeStyle; // "#000000"
-const defaultFont = ctx.font; // "10px sans-serif"
-const defaultLineWidth = ctx.lineWidth; // 1
+**[`CanvasRenderingContext2D.fontStretch`](CanvasRenderingContext2D.fontStretch.md)**
 
-ctx.strokeRect(0, 0, 300, 150); // Outline everything.
-ctx.fillStyle = "cyan";
-ctx.strokeStyle = "yellow";
-ctx.font = "30px monospace";
-ctx.lineWidth = 5;
+Sets or returns a font's font-face.
 
-ctx.translate(20, 0);
-ctx.rotate(Math.PI/16);
-ctx.scale(1.5, 1);
-ctx.save();
+**[`CanvasRenderingContext2D.textLetterSpacing`](CanvasRenderingContext2D.textLetterSpacing.md)**
 
-ctx.fillRect(25, -5, 150, 100);
-ctx.beginPath();
-ctx.moveTo(100, 0);
-ctx.lineTo(150, 80);
-ctx.lineTo(50, 80);
-ctx.closePath();
-ctx.stroke();
+Returns a double that represents horizontal spacing between characters. Setting `textLetterSpacing` to postive values spreads characters further apart, while negative values brings them closer together. The default value is `0`.
 
-ctx.fillStyle = "magenta";
-ctx.fillText("Reset me!", 10, 40);
-```
+**[`CanvasRenderingContext2D.textRendering`](CanvasRenderingContext2D.textRendering())**
 
-This results in the following canvas:
+Provides information to the rendering engine about what to optimize for when rendering text.
 
-![Non-reset canvas2d](../../data/unreset-canvas2d.png)
+**[`CanvasRenderingContext2D.textWordSpacing`](CanvasRenderingContext2D.textWordSpacing.md)**
 
-If we then follow up with:
-```js
-ctx.reset(); // All the above work is undone, canvas is now transparent black
+Returns a double that represents horizontal spacing between words. Setting `textWordSpacing` to postive values spreads words further apart, while negative values brings them closer together. The default value is `0`.
 
-ctx.getTransform().isIdentity; // true
-ctx.restore(); // Does nothing, state stack has been cleared
-ctx.getTransform().isIdentity; // true
+**[`CanvasRenderingContext2D.fontVariantCaps`](CanvasRenderingContext2D.fontVariantCaps.md)**
 
-ctx.fillStyle == defaultFillStyle; // true
-ctx.strokeStyle == defaultStrokeStyle; // true
-ctx.font == defaultFont; // true
-ctx.lineWidth == defaultLineWidth; // true
+Controls use of alternate glyphs for capital letters. If multiple sizes of capital letter glyphs are available for the chosen font, this property chooses the one with appropriate size. Otherwise it synthesizes small-caps by adapting uppercase glyphs.
 
-ctx.stroke(); // Does not redraw the triangle, the path has been cleared.
+## Events
 
-ctx.strokeRect(0, 0, 300, 150); // Outline everything.
-ctx.fillText("I have been reset.", 10, 40); // Uses the default font.
-```
+**[`contextlost`](contextlost.md)**
 
-This will then give us the canvas:
+Triggered when the user agent detects that the backing storage associated with `CanvasRenderingContext2D` on the page is "lost". Contexts can be lost for several reasons, such as a driver crashes, the application runs out of memory, etc.
 
-![Reset canvas2d](../../data/reset-canvas2d.png)
+**[`contextrestored`](contextrestored.md)**
+
+Triggered when the user agent "restores" the backing storage associated with `CanvasRenderingContext2D` on the page after being "lost".
+
+## Methods
+
+**[`CanvasRenderingContext2D.reset()`](CanvasRenderingContext2D.reset.md)**
+
+Resets the rendering context to its default state. This includes setting all pixels in the canvas to transparent black, clearing any saved states, clearing any stored path operations and resetting the drawing state to its initial values.
+
+**[`CanvasRenderingContext2D.roundRect()`](CanvasRenderingContext2D.roundRect.md)**
+
+Adds a rounded rectangle to the current sub-path.
