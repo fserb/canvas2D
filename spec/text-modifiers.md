@@ -49,7 +49,7 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-ctx.letterSpacing = "3";
+ctx.letterSpacing = "3px";
 ctx.fontVariantCaps = "all-small-caps";
 
 ```
