@@ -25,8 +25,8 @@ interface mixin CanvasTextDrawingStyles {
   // current values (font, textAlign, textBaseline, direction)...
 
   // new values
-  attribute DOMString textLetterSpacing;      // CSS letter-spacing
-  attribute DOMString textWordSpacing;        // CSS word-spacing
+  attribute DOMString letterSpacing;          // CSS letter-spacing
+  attribute DOMString wordSpacing;            // CSS word-spacing
   attribute DOMString fontVariantCaps;        // CSS font-variant-caps
   attribute DOMString fontKerning;            // CSS font-kerning
   attribute DOMString fontStretch;            // CSS font-stretch
@@ -49,7 +49,7 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-ctx.textLetterSpacing = "3px";
+ctx.letterSpacing = "3px";
 ctx.fontVariantCaps = "all-small-caps";
 
 ```
