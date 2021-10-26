@@ -1,11 +1,15 @@
 Update Canvas 2D API
 ====================
 
-This repo contains proposal for an updated version of the [Canvas 2D API](https://html.spec.whatwg.org/multipage/canvas.html), following a set of [rationales](rationale.md).
+This repo contains new, current and old proposals for updates in the [Canvas 2D API](https://html.spec.whatwg.org/multipage/canvas.html), following a set of [rationales](rationale.md).
 
 [Explainer video](https://www.youtube.com/watch?v=dfOKFSDG7IM)
 
-Feature list
+Already landed
+------------
+
+
+About to launch
 ------------
 
 - [**Canvas context loss**](spec/context-loss.md). Allow canvas to be discarded and re-drawn by demand.
@@ -26,6 +30,10 @@ Feature list
 
 - [**Modern filters**](spec/filters.md). Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
 
+In development
+------------
+
+- [**Layers**](spec/layers.md). Support layers in canvas, that will be drawn in one, allowing effects only possible with auxiliary canvases.
 
 Future ideas
 ------------
