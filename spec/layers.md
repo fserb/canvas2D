@@ -28,9 +28,17 @@ interface OffscreenCanvasRenderingContext2D {
   void endLayer();
 };
 ```
+The rendering of the layer will use the current state of the canvas, and will reset these effects to the defaults at the end of the layer. The effects that will be used are:
+- globalAlpha
+- globalCompositeOperation
+- shadowOffsetX
+- shadowOffsetY
+- shadowColor
+- shadowBlur
+- filter
 
-`beginLayer()` sets the start point of the layer, it will also specify the effects (shadows, blur, alpha, filters, compositing) that will be used to draw the layer.
-`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. When the layer ends, the 
+`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list above) that will be used when rendering the layer.
+`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. When the layer ends, we reset all the effects used in the drawing of the layer at the end of it (see list above).
 
 
 Example usage
@@ -41,8 +49,8 @@ Example usage
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-ctx.beingLayer();
 ctx.globalAlpha = 0.5; 
+ctx.beingLayer();
 ctx.fillStyle = 'rgba(225,0,0,1)';
 ctx.fillRect(50,50,75,50);
 ctx.fillStyle = 'rgba(0,255,0,1)';
@@ -72,10 +80,12 @@ ctx.drawImage(canvas2,0,0);
 Alternatives considered
 -----------------------
 
-None.
+- Adding the properties of the layer (the effects from the current canvas state) as parameters in `beginLayer()`. We opted to not add this as it would create a new semantic for the 2D API.
 
 
 References
 ----------
 
-None.
+Some examples of the same idea outside Canvas.
+- [*SaveLayer*](https://api.flutter.dev/flutter/dart-ui/Canvas/saveLayer.html) method in Flutter at Google.
+- [*BeginTransparencyLayer*](https://developer.apple.com/documentation/coregraphics/cgcontext/1456011-begintransparencylayer) method in Core Graphics at Apple.
