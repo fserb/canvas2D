@@ -40,6 +40,9 @@ The rendering of the layer will use the current state of the canvas, and will re
 `beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list above) that will be used when rendering the layer.
 `endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. When the layer ends, we reset all the effects used in the drawing of the layer at the end of it (see list above).
 
+These methods are nesteable, so layers can be created and drawn within layers.
+
+If there is a dangling `beginLayer()` without `endLayer()`, those operations will not be drawn.
 
 Example usage
 -------------
@@ -81,6 +84,8 @@ Alternatives considered
 -----------------------
 
 - Adding the properties of the layer (the effects from the current canvas state) as parameters in `beginLayer()`. We opted to not add this as it would create a new semantic for the 2D API.
+- Naming the methods `saveLayer()` and `restoreLayer()`. We opted not to do this because we wanted to make more explicit that the user is making a new layer and that it would be used to render.
+- Using `restore()` as an alternative of `endLayer()`. We opted not to do this as it could make the code less explicit.
 
 
 References
@@ -89,3 +94,4 @@ References
 Some examples of the same idea outside Canvas.
 - [*SaveLayer*](https://api.flutter.dev/flutter/dart-ui/Canvas/saveLayer.html) method in Flutter at Google.
 - [*BeginTransparencyLayer*](https://developer.apple.com/documentation/coregraphics/cgcontext/1456011-begintransparencylayer) method in Core Graphics at Apple.
+- [*SaveLayer*](https://api.skia.org/classSkCanvas.html) method in Skia.
