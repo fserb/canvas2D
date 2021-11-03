@@ -44,6 +44,8 @@ These methods are nesteable, so layers can be created and drawn within layers.
 
 If there is a dangling `beginLayer()` without `endLayer()`, those operations will not be drawn.
 
+For the interactions with `save()` and `restore()`, a `save()` without `restore()` (or single `restore()` without `save()`) between a pair of `beginLayer()` and `endLayer()` will be discarded.
+
 Example usage
 -------------
 
