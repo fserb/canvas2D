@@ -9,7 +9,7 @@ Rationale
 ---------
 
 Currently, the only way to draw a series of drawing calls at the same time, while applying the same sort of effects (shadows, blur, alpha, filters, compositing) to all of the drawn objects, without having these effects being applied one to one to this object, is by using an auxiliary canvas and then, drawing that auxiliary canvas to the canvas.
-This proposal adds an alternative to that (the same way that Fullter in Google and Core Graphics at Apple do) by creating a layer that then will be drawn in one go when the layer ends.
+This proposal adds an alternative to that by creating a layer that then will be drawn in one go when the layer ends. The idea of this addition is to have the same behavior as using an external canvas would do, without the issues of having to create an external canvas.
 
 
 Proposal
@@ -22,7 +22,9 @@ interface mixin CanvasState {
   undefined endLayer();
 };
 ```
-The rendering state used for the layer rendering will use the current state of the canvas. The effects that will be used are:
+The rendering state used for the layer rendering will use the current state of the canvas. 
+
+`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list below) that will be used when rendering the layer. At the begin of the layer, the rendering state (list below) will be reseted to the defaults, so the drawing operations in the inside of the layer, will behave as an auxiliary canvas would do. The attributes of the canvas state that we care about in `beginLayer()` are:
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
@@ -31,10 +33,8 @@ The rendering state used for the layer rendering will use the current state of t
 - shadowBlur
 - filter
 - ctm (current transformation matrix)
-- clip
+- current clipping region
 
-
-`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list above) that will be used when rendering the layer. At the begin of the layer, the rendering state (list above) will be reseted to the defaults, so the drawing operations in the inside of the layer, will behave as an auxiliary canvas would do.
 
 `endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. Once the layer ends, the rendering state will be the same as it is at the point of the `beingLayer()`, following the same pattern as `save()` and `restore()` do.
 
