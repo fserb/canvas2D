@@ -16,19 +16,13 @@ Proposal
 --------
 
 ```webidl
-interface CanvasRenderingContext2D {
+interface mixin CanvasState {
   // extending original
-  void beginLayer();
-  void endLayer();
-};
-
-interface OffscreenCanvasRenderingContext2D {
-  // extending original
-  void beginLayer();
-  void endLayer();
+  undefined beginLayer();
+  undefined endLayer();
 };
 ```
-The rendering of the layer will use the current state of the canvas, and will reset these effects to the defaults at the end of the layer. The effects that will be used are:
+The rendering state used for the layer rendering will use the current state of the canvas. The effects that will be used are:
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
@@ -36,9 +30,13 @@ The rendering of the layer will use the current state of the canvas, and will re
 - shadowColor
 - shadowBlur
 - filter
+- ctm (current transformation matrix)
+- clip
 
-`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list above) that will be used when rendering the layer.
-`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. When the layer ends, we reset all the effects used in the drawing of the layer at the end of it (see list above).
+
+`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list above) that will be used when rendering the layer. At the begin of the layer, the rendering state (list above) will be reseted to the defaults, so the drawing operations in the inside of the layer, will behave as an auxiliary canvas would do.
+
+`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. Once the layer ends, the rendering state will be the same as it is at the point of the `beingLayer()`, following the same pattern as `save()` and `restore()` do.
 
 These methods are nesteable, so layers can be created and drawn within layers.
 
@@ -55,7 +53,7 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
 ctx.globalAlpha = 0.5; 
-ctx.beingLayer();
+ctx.beginLayer();
 ctx.fillStyle = 'rgba(225,0,0,1)';
 ctx.fillRect(50,50,75,50);
 ctx.fillStyle = 'rgba(0,255,0,1)';
