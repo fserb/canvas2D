@@ -24,7 +24,7 @@ interface mixin CanvasState {
 ```
 The rendering state used for the layer rendering will use the current state of the canvas. 
 
-`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list below) that will be used when rendering the layer. At the begin of the layer, the rendering state (list below) will be reseted to the defaults, so the drawing operations in the inside of the layer, will behave as an auxiliary canvas would do. The attributes of the canvas state that we care about in `beginLayer()` are:
+`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list below) that will be used when rendering the layer. At the begin of the layer, the rendering state (list below) will be reset to the defaults, so the drawing operations in the inside of the layer, will behave as an auxiliary canvas would do. The attributes of the canvas state that we care about in `beginLayer()` are:
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
@@ -36,7 +36,7 @@ The rendering state used for the layer rendering will use the current state of t
 - current clipping region
 
 
-`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. Once the layer ends, the rendering state will be the same as it is at the point of the `beingLayer()`, following the same pattern as `save()` and `restore()` do.
+`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. Once the layer ends, the rendering state will be the same as it is at the point of the `beginLayer()`, following the same pattern as `save()` and `restore()` do.
 
 These methods are nesteable, so layers can be created and drawn within layers.
 
