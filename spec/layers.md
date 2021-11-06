@@ -1,5 +1,5 @@
-clear function
-==============
+Layers
+======
 **Status**: explainer.
 
 Provide a `beginLayer()` and `endLayer()` functions that create and close layers for Canvas.
@@ -8,8 +8,12 @@ Provide a `beginLayer()` and `endLayer()` functions that create and close layers
 Rationale
 ---------
 
-Currently, the only way to draw a series of drawing calls at the same time, while applying the same sort of effects (shadows, blur, alpha, filters, compositing) to all of the drawn objects, without having these effects being applied one to one to this object, is by using an auxiliary canvas and then, drawing that auxiliary canvas to the canvas.
-This proposal adds an alternative to that by creating a layer that then will be drawn in one go when the layer ends. The idea of this addition is to have the same behavior as using an external canvas would do, without the issues of having to create an external canvas.
+To apply a filter or compositing to a set of draw operations (as opposed
+to a single one), the onyl current solution is draw to a temporary canvas
+and then draw the temporary canvas into the final destination.
+
+This proposal adds an alternative to that by creating a layer that then will be drawn as a single unit. This would be equivalent to having a
+temporary canvas, except not only in a much more friendly way, but with the added benefit that the browser can take care of deciding what's the best dimension of the temporary canvas, given the current transform/clip.
 
 
 Proposal
@@ -22,9 +26,12 @@ interface mixin CanvasState {
   undefined endLayer();
 };
 ```
-The rendering state used for the layer rendering will use the current state of the canvas. 
+The rendering state used to render the layer is the current state of the canvas at the
+begin of the layer.
 
-`beginLayer()` sets the start point of the layer, it also captures the current state of the canvas (see list below) that will be used when rendering the layer. At the begin of the layer, the rendering state (list below) will be reset to the defaults, so the drawing operations in the inside of the layer, will behave as an auxiliary canvas would do. The attributes of the canvas state that we care about in `beginLayer()` are:
+`beginLayer()` sets the start point of the layer. It captures the current state of the canvas (see list below) that will be used when rendering the layer. At the begin of the layer, this rendering state will be reset to its defaults, i.e., the drawing operations inside the layer behave as if we are starting a new canvas.
+
+The attributes of the canvas state that are captured by `beginLayer()` are:
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
@@ -32,17 +39,21 @@ The rendering state used for the layer rendering will use the current state of t
 - shadowColor
 - shadowBlur
 - filter
-- ctm (current transformation matrix)
+- current transformation matrix (CTM)
 - current clipping region
 
 
-`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. Once the layer ends, the rendering state will be the same as it is at the point of the `beginLayer()`, following the same pattern as `save()` and `restore()` do.
+`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. Once the layer ends, the rendering state returns to the same as it was before `beginLayer()`. In this sense, this pair of functions behave identically to `save()` and `restore()`.
 
 These methods are nesteable, so layers can be created and drawn within layers.
 
-If there is a dangling `beginLayer()` without `endLayer()`, those operations will not be drawn.
+If there is a dangling `beginLayer()` without `endLayer()`, the layer never gets drawn.
 
-For the interactions with `save()` and `restore()`, a `save()` without `restore()` (or single `restore()` without `save()`) between a pair of `beginLayer()` and `endLayer()` will be discarded.
+Attention must be paid to the interaction between layers and `save()`/`restore()`. A `save()` without `restore()` (or a `restore()` without `save()`) between a pair of `beginLayer()` and `endLayer()` are always discarded. I.e., save and restore never cross the layer barrier.
+
+As an implementation detail, it's possible to implement layers on top of the current Canvas state stack, as long as attention is paid to not allow restoring something that was saved outside the layer, and that endlayer returns always at the same nest level.
+
+
 
 Example usage
 -------------
