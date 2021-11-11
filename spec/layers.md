@@ -29,9 +29,9 @@ interface mixin CanvasState {
 
 `beginLayer()` and `endLayer()` will work the same way as the pair `save()` and `restore()` do with the full current state of the canvas. `beginLayer()` will capture and store the full current state of the canvas, and `endLayer()` will restore that state.
 
-The layer will be rendered with the full current state of the canvas that was captured at the moment of `beingLayer()`.
+The layer will be rendered with the full current state of the canvas that was captured at the moment of `beginLayer()`.
 
-There is a subset of the attributes of the state of the canvas that we will call in this document *layer rendering attributes*, those are:
+There is a subset of the attributes of the state of the canvas that we will call in this document **layer rendering attributes**, those are:
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
@@ -42,7 +42,7 @@ There is a subset of the attributes of the state of the canvas that we will call
 - current transformation matrix (CTM)
 - current clipping region
 
-`beginLayer()` sets the start point of the layer. At the beginning of the layer, the *layer rendering attributes* will be set to their defaults, i.e., the drawing operations inside the layer behave as if we were starting a new canvas.
+`beginLayer()` sets the start point of the layer. At the beginning of the layer, the **layer rendering attributes** will be set to their defaults, i.e., the drawing operations inside the layer behave as if we were starting a new canvas.
 
 `endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. As mentioned before, this rendering of the layer will be done with the full state of the canvas that was captured in `beginLayer()`.
 
