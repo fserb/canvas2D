@@ -29,11 +29,9 @@ interface mixin CanvasState {
 The rendering state used to render the layer is the current state of the canvas at the
 begin of the layer.
 
-`beginLayer()` and `endLayer()` will work the same way as the pair `save()` and `restore()` do with the current state of the canvas. `beginLayer()` will capture and store the current state of the canvas, and `endLayer()` will restore that state.
+`beginLayer()` and `endLayer()` will work the same way as the pair `save()` and `restore()` do with the full current state of the canvas. `beginLayer()` will capture and store the full current state of the canvas, and `endLayer()` will restore that state.
 
-`beginLayer()` sets the start point of the layer. That layer will be rendered with the state of the canvas at the moment of `beingLayer()`. At the begin of the layer, this rendering state will be reset to its defaults, i.e., the drawing operations inside the layer behave as if we are starting a new canvas.
-
-The attributes of the canvas state that are reset by `beginLayer()` are:
+`beginLayer()` sets the start point of the layer. That layer will be rendered with the state of the canvas at the moment of `beingLayer()`. At the beginning of the layer, the following attributes of the rendering state will be set to its defaults (i.e., the drawing operations inside the layer behave as if we are starting a new canvas):
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
