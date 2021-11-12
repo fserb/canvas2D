@@ -8,9 +8,7 @@ Provide a `beginLayer()` and `endLayer()` functions that create and close layers
 Rationale
 ---------
 
-To apply a filter or compositing to a set of draw operations (as opposed
-to a single one), the onyl current solution is draw to a temporary canvas
-and then draw the temporary canvas into the final destination.
+To apply a filter or compositing to a set of draw operations (as opposed to a single one), the only current solution is draw to a temporary canvas and then draw the temporary canvas into the final destination.
 
 This proposal adds an alternative to that by creating a layer that then will be drawn as a single unit. This would be equivalent to having a
 temporary canvas, except not only in a much more friendly way, but with the added benefit that the browser can take care of deciding what's the best dimension of the temporary canvas, given the current transform/clip.
