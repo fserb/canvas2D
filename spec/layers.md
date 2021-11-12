@@ -26,12 +26,12 @@ interface mixin CanvasState {
   undefined endLayer();
 };
 ```
-The rendering state used to render the layer is the current state of the canvas at the
-begin of the layer.
 
-`beginLayer()` sets the start point of the layer. It captures the current state of the canvas (see list below) that will be used when rendering the layer. At the begin of the layer, this rendering state will be reset to its defaults, i.e., the drawing operations inside the layer behave as if we are starting a new canvas.
+`beginLayer()` and `endLayer()` will work the same way as the pair `save()` and `restore()` do with the full current state of the canvas. `beginLayer()` will capture and store the full current state of the canvas, and `endLayer()` will restore that state.
 
-The attributes of the canvas state that are captured by `beginLayer()` are:
+The layer will be rendered with the full current state of the canvas that was captured at the moment of `beginLayer()`.
+
+There is a subset of the attributes of the state of the canvas that we will call in this document **layer rendering attributes**, those are:
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
@@ -42,10 +42,11 @@ The attributes of the canvas state that are captured by `beginLayer()` are:
 - current transformation matrix (CTM)
 - current clipping region
 
+`beginLayer()` sets the start point of the layer. At the beginning of the layer, the **layer rendering attributes** will be set to their defaults, i.e., the drawing operations inside the layer behave as if we were starting a new canvas.
 
-`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. Once the layer ends, the rendering state returns to the same as it was before `beginLayer()`. In this sense, this pair of functions behave identically to `save()` and `restore()`.
+`endLayer()` sets the end point of the layer. At that moment the layer itself will be drawn as one single object into the canvas. As mentioned before, this rendering of the layer will be done with the full state of the canvas that was captured in `beginLayer()`.
 
-These methods are nesteable, so layers can be created and drawn within layers.
+`beginLayer()` and `endLayer()` are nesteable, so layers can be created and drawn within layers.
 
 If there is a dangling `beginLayer()` without `endLayer()`, the layer never gets drawn.
 
