@@ -48,7 +48,9 @@ There is a subset of the attributes of the state of the canvas that we will call
 
 `beginLayer()` and `endLayer()` are nesteable, so layers can be created and drawn within layers.
 
-If there is a dangling `beginLayer()` without `endLayer()`, the layer never gets drawn.
+An `endLayer()` without a `beginLayer()` is considered a no-op.
+
+At the end of the frame, a layer that was not closed will be rasterized, and in the next frame the layer starts empty and can still be used (and closed). This would behave as if at the end of the frame the layer was closed, and reopened - while keeping the same state as the original one.
 
 Attention must be paid to the interaction between layers and `save()`/`restore()`. A `save()` without `restore()` (or a `restore()` without `save()`) between a pair of `beginLayer()` and `endLayer()` are always discarded. I.e., save and restore never cross the layer barrier.
 
