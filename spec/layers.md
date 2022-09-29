@@ -3,10 +3,10 @@
 **Status**: explainer.
 
 ## Goals
-Provide a simple and high-performance canvas 2D layer API that can be used group multiple draw calls on which filters can be applied as a whole.
+Provide a simple and high-performance canvas 2D layer API that can be used to group multiple draw calls on which filters can be applied as a whole.
 
 ## Non-goals
-Provide a mean for recording and replaying draw commands multiple times. This is an orthogonal concern with a completly separate set of costs and benefits. It has been previously suggested in the [Recorded Pictures](https://github.com/fserb/canvas2D/blob/master/spec/recording.md) proposal and should be pursued separately.
+Provide a mean for recording and replaying draw commands multiple times. This is an orthogonal concern with a completely separate set of costs and benefits. It has been previously suggested in the [Recorded Pictures](https://github.com/fserb/canvas2D/blob/master/spec/recording.md) proposal and should be pursued separately.
 
 ## Rationale
 
@@ -27,15 +27,15 @@ interface mixin CanvasState {
 };
 ```
 
-Layers are created by calling `beginLayer()` on the context and terminated by calling `endLayer()`. The layer API do not use a separate layer context: any draw calls performed on the main context between calls to `beginLayer()` and `endLayer()` are considered part of that layer. `beginLayer()` and `endLayer()` are nesteable, so layers can be created and drawn within layers. The context must therefore keep a stack of active layers and apply draw calls on the layer at the top of this stack.
+Layers are created by calling `beginLayer()` on the context and terminated by calling `endLayer()`. The layer API do not use a separate layer context: any draw calls performed on the main context between calls to `beginLayer()` and `endLayer()` are considered part of that layer. `beginLayer()` and `endLayer()` are nestable, so layers can be created and drawn within layers. The context must therefore keep a stack of active layers and apply draw calls on the layer at the top of this stack.
 
-Layers behave as if all draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result).
+Layers behave as if all the draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result).
 
-Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters can be specified as a strings parsable as a [\<filter-value-list>](https://drafts.fxtf.org/filter-effects/#typedef-filter-value-list), or as a [CanvasFiler](https://github.com/whatwg/html/issues/5621) object (when that proposal lands).
+Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters can be specified as a string parsable as a [\<filter-value-list>](https://drafts.fxtf.org/filter-effects/#typedef-filter-value-list), or as a [CanvasFilter](https://github.com/whatwg/html/issues/5621) object (when that proposal lands).
 
-`beginLayer()` and `endLayer()` save and restore the full current state of the context, similarly to `save()` and `restore()`. `beginLayer()`/`endLayer()` and `save()`/`restore()` must therefore operate on the same stack, which must keeps trak of both the layers and rendering state nesting.
+`beginLayer()` and `endLayer()` save and restore the full current state of the context, similarly to `save()` and `restore()`. `beginLayer()`/`endLayer()` and `save()`/`restore()` must therefore operate on the same stack, which must keep track of both the layers and rendering state nesting.
 
-A subset of the rendering state we'll call **layer rendering attributes** are applied on the layer's resulting texture. To make sure that these are not applied twice (once on the draw calls in the layer and once on the layer's result), these attributes must be resetted to their default values at the begining of the layer. `endLayer()` will restore them to the value they had when `beginLayer()` was called. The **layer rendering attributes** are:
+A subset of the rendering state we'll call **layer rendering attributes** are applied on the layer's resulting texture. To make sure that these are not applied twice (once on the draw calls in the layer and once on the layer's result), these attributes must be resetted to their default values at the beginning of the layer. `endLayer()` will restore them to the value they had when `beginLayer()` was called. The **layer rendering attributes** are:
 - globalAlpha
 - globalCompositeOperation
 - shadowOffsetX
@@ -89,7 +89,7 @@ ctx.rotate(Math.PI);
 ctx.drawRect(10, 10, 100, 100);
 ```
 
-If we read the transformations in the order they are specified, we would say that the transformations apply to the coordinate system. Here, we would be translating the whole canvas' coordinate system by [-100, -100], rotating it by -PI, and drawing the rectangle at position [10, 10]. If instead we read the transformationin in reverse order, we would say that we are drawing a rect at position [10, 10], rotating that rectangle by PI, and then translating it by [100, 100]. Either option would produce the exact same result.
+If we read the transformations in the order they are specified, we would say that the transformations apply to the coordinate system. Here, we would be translating the whole canvas' coordinate system by [-100, -100], rotating it by -PI, and drawing the rectangle at position [10, 10]. If instead we read the transformation in reverse order, we would say that we are drawing a rect at position [10, 10], rotating that rectangle by PI, and then translating it by [100, 100]. Either option would produce the exact same result.
 
 When thinking about layers however, these two options might not always be equivalent. Take for instance:
 ```js
@@ -103,9 +103,9 @@ ctx.endLayer();
 
 Here, if we transform the coordinate system, the rectangle would be drawn at it's exact final position. If instead we rotate drawn primitives, we would need to first draw the rectangle party rotated in the layer's temporary texture, and then rotate that layer's texture to it's final position. This option would require the layer's texture to be re-sampled, which would lower performance and image quality.
 
-One of the main goal of this proposal is to unlock a high performance code path to implement layers. We therefore want to allow browsers to optimize away layer resampling. To make this possible, a layer must know what the parent transformation is. Therefore, the current transformation matric (CTM) and clip cannot be resetted when entering a layer. Calling `ctx.getTransform()` from within a layer will give the global transform, including all transformation in the parent and current layers.
+One of the main goal of this proposal is to unlock a high performance code path to implement layers. We therefore want to allow browsers to optimize away layer resampling. To make this possible, a layer must know what the parent transformation is. Therefore, the current transformation matrix (CTM) and clip cannot be resetted when entering a layer. Calling `ctx.getTransform()` from within a layer will give the global transform, including all transformation in the parent and current layers.
 
-Simiarly, to allow browsers to optimize away layer resampling, the `imageSmootingEnabled` and `imageSmoothingQuality` states cannot apply to the layer's result texture.
+Similarly, to allow browsers to optimize away layer resampling, the `imageSmootingEnabled` and `imageSmoothingQuality` states cannot apply to the layer's result texture. In addition, if smoothing was to be applied on every layer outputs, the image quality would degrade on every layer nesting level we add.
 
 ### Unclosed layers
 When a frame is rendered (via any render opportunities: end of JS task, call to `drawImage(canvas, ...)`, etc.), a layer that was not closed will be rasterized, and in the next frame the layer starts empty and can still be used (and closed). This would behave as if at the end of the frame, the layer was closed and reopened, while keeping the same state as the original one. See an [analysis of alternatives considered here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.jz3qy4ebxhpr).
@@ -113,7 +113,7 @@ When a frame is rendered (via any render opportunities: end of JS task, call to 
 ### Unmatched calls
 An `endLayer()` without a `beginLayer()` is considered malformed and throws an exception. See [here for an analysis of the alternatives considered](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.dilmo33w0023).
 
-### Interation with `save()`/`restore()`
+### Interaction with `save()`/`restore()`
 To be consistent with how [unmatched calls](#unmatched-calls) are handled, invalid mixes of `save()`/`restore()` and `beginLayer()`/`endLayer()` calls are considered malformed and throws an exception. For instance, the following are all considered malformed and throw exceptions:
 
 ```js
@@ -124,19 +124,19 @@ beginLayer(); restore();  // No matching save() in current layer.
 ```
 
 ### Call to `ctx.reset()` inside layer
-[By design](https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-reset), calling `ctx.reset()` resets the whole canvas and bring it back to it's original default state. This includes clearing the context's drawing state stack. Therefore, calling `ctx.reset()` after calls to `ctx.beginLayer()` must discard all pending layers. As described in the [Unclosed Layers section](#unclosed-layers), doing `ctx.beginLayer(); ctx.reset(); ctx.endLayer();` is malformed and throws an exception since `endLayer()` has no matching `beginLayer()` (it was discarded by `reset()`). 
+[By design](https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-reset), calling `ctx.reset()` resets the whole canvas and brings it back to its original default state. This includes clearing the context's drawing state stack. Therefore, calling `ctx.reset()` after calls to `ctx.beginLayer()` must discard all pending layers. As described in the [Unclosed Layers section](#unclosed-layers), doing `ctx.beginLayer(); ctx.reset(); ctx.endLayer();` is malformed and throws an exception since `endLayer()` has no matching `beginLayer()` (it was discarded by `reset()`). 
 
 ### Call to `ctx.clearRect()` inside layer
 [By design](https://html.spec.whatwg.org/multipage/canvas.html#drawing-rectangles-to-the-bitmap) `ctx.clearRect` behaves like `crx.fillRect`, with the difference being that it paints with transparent black instead of the current fill style. Therefore, calling `ctx.clearRect()` inside a layer writes transparent black to the pixels in that layer, not directly in the parent canvas or layer.
 
 ### Reading canvas content with unclosed layers
-APIs like `ctx.getImageData()` or `ctx.drawImage(canvas)` effectively renders a canvas frame. As described in the [Unclosed layers section](#unclosed-layers), any frame rendered while layers are active has the same effect as closing the layers, calling `ctx.getImageData()` and re-opening all the layers as if they were never closed.
+APIs like `ctx.getImageData()` or `ctx.drawImage(canvas)` effectively render a canvas frame. As described in the [Unclosed layers section](#unclosed-layers), any frame rendered while layers are active has the same effect as closing the layers, calling `ctx.getImageData()` and re-opening all the layers as if they were never closed.
 
 ### Call to `ctx.putImageData()` inside layer
 [By design](https://html.spec.whatwg.org/multipage/canvas.html#pixel-manipulation), `putImageData()` writes pixels to the canvas wholesale, bypassing globalAlpha, shadow attributes and globalCompositeOperation. To be consistent with this, `putImageData()` must also bypass layers and write directly to the canvas underneath, or else, the pixel written would be affected by the layer's filter, blending or compositing.
 
 ### Call to `ctx.drawImage()` inside layer
-[By design](https://html.spec.whatwg.org/multipage/canvas.html#drawing-images), `drawImage()` is affected by globalAlpha, attributes and globalCompositeOperation. To be consistent, calling `drawImage()` inside a layer write the image to that layer, which will in turn be filtered/blended/composited to the parent.
+[By design](https://html.spec.whatwg.org/multipage/canvas.html#drawing-images), `drawImage()` is affected by globalAlpha, attributes and globalCompositeOperation. To be consistent, calling `drawImage()` inside a layer writes the image to that layer, which will in turn be filtered/blended/composited to the parent.
 
 ### Interaction with the current default path
 When drawing paths, only the calls that draw pixels (functions in the [CanvasDrawPath interface](https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawpath)) are impacted by layers. The [*current default path* not being part of the drawing state](https://html.spec.whatwg.org/multipage/canvas.html#drawing-paths-to-the-canvas), it's unaffected by the opening and closing of layers. Therefore, this code:
@@ -182,9 +182,9 @@ See [here for an analysis of the alternatives considered](https://docs.google.co
 
 A full analysis of the considered alternatives can be found in [this document](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#)
 
-In particual:
+In particular:
 - An analysis of the different API styles considered is done in the [Layer creation API](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.35wlbbo9qx59) section (for instance, `beginLayer(); endLayer();` vs. `layer=beginLayer(); layer.draw();`).
-- Different strategies for specifying layer rendering attribues were compared in the [Layer parameters](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.a7g8s991icf1) section (for instance: `ctx.globalAlpha=0.5; ctx.beginLayer('blur(4px)');` vs `ctx.beginLayer({filter: 'blur(4px)', alpha: 0.5"});`).
+- Different strategies for specifying layer rendering attributes were compared in the [Layer parameters](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.a7g8s991icf1) section (for instance: `ctx.globalAlpha=0.5; ctx.beginLayer('blur(4px)');` vs `ctx.beginLayer({filter: 'blur(4px)', alpha: 0.5"});`).
 
 
 ## References
