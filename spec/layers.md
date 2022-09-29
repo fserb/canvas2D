@@ -6,7 +6,7 @@
 Provide a simple and high-performance canvas 2D layer API that can be used to group multiple draw calls on which filters can be applied as a whole.
 
 ## Non-goals
-Provide a mean for recording and replaying draw commands multiple times. This is an orthogonal concern with a completely separate set of costs and benefits. It has been previously suggested in the [Recorded Pictures](https://github.com/fserb/canvas2D/blob/master/spec/recording.md) proposal and should be pursued separately.
+Provide a means for recording and replaying draw commands multiple times. This is an orthogonal concern with a completely separate set of costs and benefits. It has been previously suggested in the [Recorded Pictures](https://github.com/fserb/canvas2D/blob/master/spec/recording.md) proposal and should be pursued separately.
 
 ## Rationale
 
@@ -27,7 +27,7 @@ interface mixin CanvasState {
 };
 ```
 
-Layers are created by calling `beginLayer()` on the context and terminated by calling `endLayer()`. The layer API do not use a separate layer context: any draw calls performed on the main context between calls to `beginLayer()` and `endLayer()` are considered part of that layer. `beginLayer()` and `endLayer()` are nestable, so layers can be created and drawn within layers. The context must therefore keep a stack of active layers and apply draw calls on the layer at the top of this stack.
+Layers are created by calling `beginLayer()` on the context and terminated by calling `endLayer()`. The layer API does not use a separate layer context: any draw calls performed on the main context between calls to `beginLayer()` and `endLayer()` are considered part of that layer. `beginLayer()` and `endLayer()` are nestable, so layers can be created and drawn within layers. The context must therefore keep a stack of active layers and apply draw calls on the layer at the top of this stack.
 
 Layers behave as if all the draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result).
 
@@ -103,9 +103,9 @@ ctx.endLayer();
 
 Here, if we transform the coordinate system, the rectangle would be drawn at its exact final position. If instead we rotate drawn primitives, we would need to first draw the rectangle partly rotated in the layer's temporary texture, and then rotate that layer's texture to its final position. This option would require the layer's texture to be re-sampled, which would lower performance and image quality.
 
-One of the main goal of this proposal is to unlock a high performance code path to implement layers. We therefore want to allow browsers to optimize away layer resampling. To make this possible, a layer must know what the parent transformation is. Therefore, the current transformation matrix (CTM) and clip cannot be resetted when entering a layer. Calling `ctx.getTransform()` from within a layer will give the global transform, including all transformation in the parent and current layers.
+One of the main goals of this proposal is to unlock a high performance code path to implement layers. We therefore want to allow browsers to optimize away layer resampling. To make this possible, a layer must know what the parent transformation is. Therefore, the current transformation matrix (CTM) and clip cannot be resetted when entering a layer. Calling `ctx.getTransform()` from within a layer will give the global transform, including all transformations in the parent and current layers.
 
-Similarly, to allow browsers to optimize away layer resampling, the `imageSmoothingEnabled` and `imageSmoothingQuality` states cannot apply to the layer's result texture. In addition, if smoothing was to be applied on every layer outputs, the image quality would degrade on every layer nesting level we add.
+Similarly, to allow browsers to optimize away layer resampling, the `imageSmoothingEnabled` and `imageSmoothingQuality` states cannot apply to the layer's result texture. In addition, if smoothing was to be applied on every layer output, the image quality would degrade on every layer nesting level we add.
 
 ### Unclosed layers
 When a frame is rendered (via any render opportunities: end of JS task, call to `drawImage(canvas, ...)`, etc.), a layer that was not closed will be rasterized, and in the next frame the layer starts empty and can still be used (and closed). This would behave as if at the end of the frame, the layer was closed and reopened, while keeping the same state as the original one. See an [analysis of alternatives considered here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.jz3qy4ebxhpr).
@@ -185,7 +185,6 @@ A full analysis of the considered alternatives can be found in [this document](h
 In particular:
 - An analysis of the different API styles considered is done in the [Layer creation API](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.35wlbbo9qx59) section (for instance, `beginLayer(); endLayer();` vs. `layer=beginLayer(); layer.draw();`).
 - Different strategies for specifying layer rendering attributes were compared in the [Layer parameters](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.a7g8s991icf1) section (for instance: `ctx.globalAlpha=0.5; ctx.beginLayer('blur(4px)');` vs `ctx.beginLayer({filter: 'blur(4px)', alpha: 0.5"});`).
-
 
 ## References
 
