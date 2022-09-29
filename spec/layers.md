@@ -75,7 +75,7 @@ ctx2.fillStyle = 'rgba(0, 255, 0, 1)';
 ctx2.fillRect(70, 70, 75, 50);
 
 ctx.globalAlpha = 0.5;
-ctx.layer = 'blur(4px)';
+ctx.filter = 'blur(4px)';
 ctx.drawImage(canvas2, 0, 0);
 ```
 
@@ -86,10 +86,10 @@ There are two ways we can view transformations. Take for instance:
 ```js
 ctx.translate(100, 100);
 ctx.rotate(Math.PI);
-ctx.drawRect(10, 10, 100, 100);
+ctx.fillRect(10, 10, 100, 100);
 ```
 
-If we read the transformations in the order they are specified, we would say that the transformations apply to the coordinate system. Here, we would be translating the whole canvas' coordinate system by [-100, -100], rotating it by -PI, and drawing the rectangle at position [10, 10]. If instead we read the transformation in reverse order, we would say that we are drawing a rect at position [10, 10], rotating that rectangle by PI, and then translating it by [100, 100]. Either option would produce the exact same result.
+If we read the transformations in the order they are specified, we would say that the transformations apply to the coordinate system. Here, we would be translating the whole canvas' coordinate system by [-100, -100], rotating it by -PI, and drawing the rectangle at position [10, 10]. If instead we read the transformation in reverse order, we would say that we are drawing a rectangle at position [10, 10], rotating that rectangle by PI, and then translating it by [100, 100]. Either option would produce the exact same result.
 
 When thinking about layers however, these two options might not always be equivalent. Take for instance:
 ```js
@@ -97,11 +97,11 @@ ctx.translate(100, 100);
 ctx.rotate(0.2 * Math.PI);
 ctx.beginLayer();
 ctx.rotate(0.8 * Math.PI);
-ctx.drawRect(10, 10, 100, 100);
+ctx.fillRect(10, 10, 100, 100);
 ctx.endLayer();
 ```
 
-Here, if we transform the coordinate system, the rectangle would be drawn at it's exact final position. If instead we rotate drawn primitives, we would need to first draw the rectangle party rotated in the layer's temporary texture, and then rotate that layer's texture to it's final position. This option would require the layer's texture to be re-sampled, which would lower performance and image quality.
+Here, if we transform the coordinate system, the rectangle would be drawn at its exact final position. If instead we rotate drawn primitives, we would need to first draw the rectangle partly rotated in the layer's temporary texture, and then rotate that layer's texture to its final position. This option would require the layer's texture to be re-sampled, which would lower performance and image quality.
 
 One of the main goal of this proposal is to unlock a high performance code path to implement layers. We therefore want to allow browsers to optimize away layer resampling. To make this possible, a layer must know what the parent transformation is. Therefore, the current transformation matrix (CTM) and clip cannot be resetted when entering a layer. Calling `ctx.getTransform()` from within a layer will give the global transform, including all transformation in the parent and current layers.
 
