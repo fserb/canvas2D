@@ -27,11 +27,11 @@ interface mixin CanvasState {
 };
 ```
 
-Layers are created by calling `beginLayer()` on the context and terminated by calling `endLayer()`. The layer API does not use a separate layer context: any draw calls performed on the main context between calls to `beginLayer()` and `endLayer()` are considered part of that layer. `beginLayer()` and `endLayer()` are nestable, so layers can be created and drawn within layers. The context must therefore keep a stack of active layers and apply draw calls on the layer at the top of this stack.
+Layers are created by calling `beginLayer()` on the context and terminated by calling `endLayer()`. The layer API does not use a separate layer context: any draw calls performed on the main context between calls to `beginLayer()` and `endLayer()` are considered part of that layer. `beginLayer()` and `endLayer()` are nestable, so layers can be created and drawn within layers. The context must therefore keep a stack of active layers and apply draw calls on the layer at the top of this stack. [See here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.35wlbbo9qx59) for an analysis of different API designs considered.
 
 Layers behave as if all the draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result).
 
-Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters can be specified as a string parsable as a [\<filter-value-list>](https://drafts.fxtf.org/filter-effects/#typedef-filter-value-list), or as a [CanvasFilter](https://github.com/whatwg/html/issues/5621) object (when that proposal lands).
+Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters can be specified as a string parsable as a [\<filter-value-list>](https://drafts.fxtf.org/filter-effects/#typedef-filter-value-list), or as a [CanvasFilter](https://github.com/whatwg/html/issues/5621) object (when that proposal lands). [See here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.52ab2yqq661g) for an analysis of alternatives considered.
 
 `beginLayer()` and `endLayer()` save and restore the full current state of the context, similarly to `save()` and `restore()`. `beginLayer()`/`endLayer()` and `save()`/`restore()` must therefore operate on the same stack, which must keep track of both the layers and rendering state nesting.
 
@@ -180,11 +180,7 @@ See [here for an analysis of the alternatives considered](https://docs.google.co
 
 ## Alternatives considered
 
-A full analysis of the considered alternatives can be found in [this document](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#)
-
-In particular:
-- An analysis of the different API styles considered is done in the [Layer creation API](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.35wlbbo9qx59) section (for instance, `beginLayer(); endLayer();` vs. `layer=beginLayer(); layer.draw();`).
-- Different strategies for specifying layer rendering attributes were compared in the [Layer parameters](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.a7g8s991icf1) section (for instance: `ctx.globalAlpha=0.5; ctx.beginLayer('blur(4px)');` vs `ctx.beginLayer({filter: 'blur(4px)', alpha: 0.5"});`).
+A full analysis of all considered alternatives can be found in [this document](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#)
 
 ## References
 
