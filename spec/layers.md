@@ -22,16 +22,16 @@ This proposal adds a simple and efficient API for creating layers to be drawn as
 ```webidl
 interface mixin CanvasState {
   // extending original
-  undefined beginLayer(optional (DOMString or CanvasFilter) filter);
+  undefined beginLayer(optional CanvasFilter filter);
   undefined endLayer();
 };
 ```
 
 Layers are created by calling `beginLayer()` on the context and terminated by calling `endLayer()`. The layer API does not use a separate layer context: any draw calls performed on the main context between calls to `beginLayer()` and `endLayer()` are considered part of that layer. `beginLayer()` and `endLayer()` are nestable, so layers can be created and drawn within layers. The context must therefore keep a stack of active layers and apply draw calls on the layer at the top of this stack. [See here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.35wlbbo9qx59) for an analysis of different API designs considered.
 
-Layers behave as if all the draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result).
+Layers behave as if all the draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result). Image smoothing only applies to individual draw calls, not on layer result textures ([more on this below](#current-transformation-matrix-clip-and-image-smoothing)).
 
-Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters can be specified as a string parsable as a [\<filter-value-list>](https://drafts.fxtf.org/filter-effects/#typedef-filter-value-list), or as a [CanvasFilter](https://github.com/whatwg/html/issues/5621) object (when that proposal lands). [See here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.52ab2yqq661g) for an analysis of alternatives considered.
+Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters are specified as a [CanvasFilter](https://github.com/whatwg/html/issues/5621) object. [See below](#alternative-filter-api) for possible future improvements, [and here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.52ab2yqq661g) for a full analysis of alternatives considered.
 
 `beginLayer()` and `endLayer()` save and restore the full current state of the context, similarly to `save()` and `restore()`. `beginLayer()`/`endLayer()` and `save()`/`restore()` must therefore operate on the same stack, which must keep track of both the layers and rendering state nesting.
 
@@ -52,7 +52,9 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
 ctx.globalAlpha = 0.5; 
-ctx.beginLayer('blur(4px)');
+
+ctx.beginLayer(new CanvasFilter({filter: "gaussianBlur", stdDeviation: 4}));
+
 ctx.fillStyle = 'rgba(225, 0, 0, 1)';
 ctx.fillRect(50, 50, 75, 50);
 ctx.fillStyle = 'rgba(0, 255, 0, 1)';
@@ -77,6 +79,35 @@ ctx2.fillRect(70, 70, 75, 50);
 ctx.globalAlpha = 0.5;
 ctx.filter = 'blur(4px)';
 ctx.drawImage(canvas2, 0, 0);
+```
+
+## Alternative filter API
+In addition to supporting `CanvasFilter`, we could support a syntactic sugar where `CanvasFilter` arguments could be passed directly to `beginLayer`, removing the need to create actual CanvasFilter objects:
+```js
+undefined beginLayer(optional (CanvasFilter or object or FrozenArray<object>) filter);
+```
+
+Example usage:
+```js
+// No filter:
+ctx.beginLayer();
+
+// CanvasFilter object:
+ctx.beginLayer(new CanvasFilter({filter: "gaussianBlur", stdDeviation: 4}));
+
+// Without intermediate CanvasFilter object:
+ctx.beginLayer({filter: "gaussianBlur", stdDeviation: 4});
+
+// Composite filters without a CanvasFilter object:
+ctx.beginLayer([{filter: "gaussianBlur", stdDeviation: 4},
+                {filter: "turbulence", frequency: 0.05, numOctaves: 2}]);
+```
+
+If we ever wanted to add more arguments to `beginLayer`, like `alpha` or `compositeOperation` however, we might want to revisit the `CanvasFilter` proposal to allow syntax like:
+```js
+ctx.beginLayer({filter: [{gaussianBlur: {stdDeviation: 2}},
+                         {turbulence: {frequency: 0.05, numOctaves: 2}}],
+                compositeOp: "source-over"});
 ```
 
 ## Corner cases
@@ -133,7 +164,7 @@ beginLayer(); restore();  // No matching save() in current layer.
 APIs like `ctx.getImageData()` or `ctx.drawImage(canvas)` effectively render a canvas frame. As described in the [Unclosed layers section](#unclosed-layers), any frame rendered while layers are active has the same effect as closing the layers, rendering the frame and re-opening the layers with an empty content but keeping their original layer rendering states.
 
 ### Call to `ctx.putImageData()` inside layer
-[By design](https://html.spec.whatwg.org/multipage/canvas.html#pixel-manipulation), `putImageData()` writes pixels to the canvas wholesale, bypassing globalAlpha, shadow attributes and globalCompositeOperation. To be consistent with this, `putImageData()` must also bypass layers and write directly to the canvas underneath, or else, the pixel written would be affected by the layer's filter, blending or compositing.
+[By design](https://html.spec.whatwg.org/multipage/canvas.html#pixel-manipulation), `putImageData()` writes pixels to the canvas wholesale, bypassing globalAlpha, shadow attributes and globalCompositeOperation. To be consistent with this, `putImageData()` must also bypass layers and write directly to the canvas underneath, or else, the pixels written would be affected by the layer's filter, blending or compositing. As described in the [Unclosed layers section](#unclosed-layers), calling `ctx.putImageData()` while unclosed layers exists has the same effects as closing the layers, calling `crx.putImageData()` and re-opening the layers with an empty content but keeping their original layer rendering states.
 
 ### Call to `ctx.drawImage()` inside layer
 [By design](https://html.spec.whatwg.org/multipage/canvas.html#drawing-images), `drawImage()` is affected by globalAlpha, attributes and globalCompositeOperation. To be consistent, calling `drawImage()` inside a layer writes the image to that layer, which will in turn be filtered/blended/composited to the parent.
@@ -141,7 +172,7 @@ APIs like `ctx.getImageData()` or `ctx.drawImage(canvas)` effectively render a c
 ### Interaction with the current default path
 When drawing paths, only the calls that draw pixels (functions in the [CanvasDrawPath interface](https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawpath)) are impacted by layers. The [*current default path* not being part of the drawing state](https://html.spec.whatwg.org/multipage/canvas.html#drawing-paths-to-the-canvas), it's unaffected by the opening and closing of layers. Therefore, this code:
 ```js
-  ctx.beginLayer('drop-shadow(5px 5px 3px black)');
+  ctx.beginLayer({filter: "gaussianBlur", stdDeviation: 2});
   ctx.beginPath();
   ctx.rect(40, 40, 75, 50);
   ctx.stroke();
@@ -152,28 +183,21 @@ is equivalent to:
 ```js
   ctx.beginPath();
   ctx.rect(40, 40, 75, 50);
-  ctx.beginLayer('drop-shadow(5px 5px 3px black)');
+  ctx.beginLayer({filter: "gaussianBlur", stdDeviation: 2});
   ctx.stroke();
   ctx.endLayer();
 ```
 
 ### Interaction with `ctx.filter = ...;`
-Some Canvas2D implementations (Chrome and Firefox) shipped a feature where filters can be specified on the context directly, by doing `ctx.filter = <some filter>`. For those implementations, calling `ctx.beginLayer(my_filter); ctx.endLayer()` is equivalent to:
+Some Canvas2D implementations (Chrome and Firefox) shipped a feature where filters can be specified on the context directly, by doing `ctx.filter = <some filter>`. For those implementations, specifying a filter on both the context and the layer nests the two filters one into another. For instance,
 ```
-  [original_filter, ctx.filter] = [ctx.filter, my_filter];
-  beginLayer();
-  endLayer();
-  ctx.filter = original_filter;
-```
-
-Specifying a filter on both the context and the layer nests the two filters one into another. For instance,
-```
-ctx.filter = 'contrast(175%)';
-ctx.beginLayer('brightness(3%)')
+ctx.filter = new CanvasFilter(my_filter1);
+ctx.beginLayer(my_filter2);
 ```
 is the same as:
 ```
-ctx.beginLayer('brightness(3%) contrast(175%)');
+ctx.filter = 'none';
+ctx.beginLayer([my_filter2, my_filter1]);
 ```
 
 See [here for an analysis of the alternatives considered](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.6u3unyd2kkpo).
