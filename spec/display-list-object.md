@@ -44,18 +44,14 @@ This approach unburdens JavaScript execution, reduces call pressure along the AP
 Requirements
 ------------
 
-* **Legible text**: text should be inspectable in human-understandable spans (e.g. up to formatted multi-line paragraphs), not glyphs, words or other fragments
-* **Formatted text**: formatting of text should be inspectable as well (e.g. size, bold, etc.)
-* **Fast**: updating a Canvas context's display list should scale proportional to the size of the update, not the size of the display list
-* **Inexpensive**: retained drawings should not consume backing memory for raster storage unless and until needed (e.g. when a raster image is requested or when a drawing is displayed on screen)
+A retained mode Canvas should provide the following features:
+
+* **Legible text**: text should be programmatically inspectable in human-understandable spans like formatted multi-line paragraphs (not glyphs, words or other fragments) without the need for OCR
+* **Styled text**: applied text styles should be programmatically inspectable (e.g. size, bold, etc.)
+* **Fast**: updating a retained mode Canvas should scale proportional to the size of the update, not the size of the display list
+* **Inexpensive**: display lists should not consume backing memory for raster storage unless and until needed (e.g. when a raster image is requested or when a drawing is displayed on screen)
 * **Scalable**: scaling a retained mode Canvas does not produce pixelation artifacts like with the current immediate mode Canvas
-* **Incrementally adoptable**: code bases utilizing current Canvas APIs should be able to gradually migrate to using DLOs
-  * E.g. an application can switch to using a `2dRetained` context type that lets it capture its existing Canvas API calls and output a DLO, gradually migrating to updating DLO rather than redrawing to Canvas
-
-Open questions
---------------
-
-* Size invariant 
+* **Incrementally adoptable**: applications using the current Canvas APIs should be able to gradually migrate to using a retained mode Canvas
 
 Strawman Proposal
 -----------------
@@ -66,18 +62,20 @@ We propose a format and data structure pair (similar to HTML and the DOM) for lo
 
 ### Container
 
-Programmatically, a DLO can be used with a Canvas context of time `2dRetained`:
+Programmatically, a DLO can be used with a Canvas context of type `2dRetained`:
 
 ```js
 const canvas = document.getElementById("my-canvas-element");
 const ctx = canvas.getContext("2dRetained");
 ```
 
-> _**Why**: A `2dRetined` context type is a drop-in replacement for the current `2d` context type, allowing applications to incrementally adopt DLO. However, the `2dRetained` context type may in the future add new drawing APIs that are not available in the `2d` context type._
+A `2dRetined` context type is a drop-in replacement for the current `2d` context type and supports the same drawing methods.
+
+> _**Why**: A drop-in replacement context type (actually a superset) allows applications to incrementally adopt retained mode Canvas._
 
 ### Reading a DLO
 
-A DLO can be obtained from a `2dRetained` context:
+A DLO can be obtained from a Canvas `2dRetained` context:
 
 ```js
 dlo = ctx.getDisplayList();
@@ -98,7 +96,7 @@ The DLO contains a capture of the drawing commands issued to the context since i
 
 ### Drawing and updating a Canvas with a DLO
 
-A `2dRetained` context can draw a DLO directly:
+A Canvas `2dRetained` context can draw a DLO directly:
 
 ```js
 ctx.drawDisplayList(dlo);
@@ -114,11 +112,11 @@ A Canvas context of type `2dRetained` can be entirely _updated_ so that it match
 ctx.updateDisplayList(dlo);
 ```
 
-> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do _all_ their drawing for a given context into a DLO to get maximum performance out of the implementation._
+> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
 
-### DLO anchors
+### DLO handles
 
-Drawing to a DLO object, rather than a Canvas context, allows the application to get handles to drawn elements.
+Drawing to a DLO object, rather than to its Canvas context, allows the application to get handles to drawn elements.
 
 ```js
 rectHandle = dlo.strokeRect(50, 50, 50, 50);
@@ -127,16 +125,16 @@ rectHandle = dlo.strokeRect(50, 50, 50, 50);
 Handles can be used to query the DLO element and update it:
 
 ```js
-rectHandle.command(); // ["strokeRect", 50, 50, 50, 50]
+rectHandle.getCommand(); // ["strokeRect", 50, 50, 50, 50]
 rectHandle.update(100, 100, 100, 100);
-rectHandle.command(); // ["strokeRect", 100, 100, 100, 100]
+rectHandle.getCommand(); // ["strokeRect", 100, 100, 100, 100]
 ```
 
-The `update` method removes the command from the display list and replaces it with the equivalent command with the new arguments. Updates to not propagate to a Canvas context until the DLO is drawn on the context or updated into the context as above.
+The `update` method removes the command from the display list and replaces it with the equivalent command with the new arguments. Updates do not propagate to a Canvas context until the DLO is drawn on the context or updated into the context as above.
 
-> _**Why**: DLO anchors allow applications to modify DLOs with performance that scales with the size of the update rather than with the size of the DLO. This enables very large and complex scenes to be easily updated with minimal Javascript code in user space and heavier operations like computing deltas can be lowered deeper into the implementation's paint pipeline._
+> _**Why**: DLO anchors allow applications to modify DLOs with memory and performance that scales with the size of the anticipated updates rather than with the size of the DLO. This enables applications to update very large and complex scenes without needing to traverse the DLO for lookups or store indexes into the full DLO._
 
-> TODO: how to get anchors from serialized DLOs?
+> _**Open question**: How to get handles for elements in serialized DLOs? Might require IDs in the end._
 
 ### Text
 
@@ -209,9 +207,9 @@ The corresponding DLO in JSON format is:
 }
 ```
 
-Applications will typically make their layout decisions before serializing a DLO to a JSON. E.g. an application may produce a DLO for common Canvas sizes, serialize and store them, and draw them directly for faster startup.
+Applications will typically make their layout decisions before serializing a DLO to JSON. E.g. an application may produce a DLO for common Canvas sizes, serialize and store them, and draw them directly for faster startup.
 
-> _**Why**: As above, drawing formatted text makes the text available to the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
+> _**Why**: As above, drawing formatted text makes the text and its associated style information available to the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
 
 Resources
 ---------
