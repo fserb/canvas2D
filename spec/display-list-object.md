@@ -1,5 +1,8 @@
 Display List Object (DLO)
 =========================
+
+> This explainer is an incomplete working draft.
+
 **Status**: explainer.
 
 _A format and API for efficiently creating, transmitting, modifying and rendering UI and graphics on 2D Canvas._
