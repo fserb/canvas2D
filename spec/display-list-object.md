@@ -69,7 +69,7 @@ const canvas = document.getElementById("my-canvas-element");
 const ctx = canvas.getContext("2dRetained");
 ```
 
-A `2dRetined` context type is a drop-in replacement for the current `2d` context type and supports the same drawing methods.
+A `2dRetained` context type is a drop-in replacement for the current `2d` context type and supports the same drawing methods.
 
 > _**Why**: A drop-in replacement context type (actually a superset) allows applications to incrementally adopt retained mode Canvas._
 
@@ -116,13 +116,35 @@ ctx.updateDisplayList(dlo);
 
 ### DLO handles
 
-Drawing to a DLO object, rather than to its Canvas context, allows the application to get handles to drawn elements.
+Drawing against a handle allows the application to later modify certain commands in the DLO:
 
 ```js
-rectHandle = dlo.strokeRect(50, 50, 50, 50);
+rectHandle = ctx.withHandle("rectHandle").strokeRect(50, 50, 50, 50);
 ```
 
-Handles can be used to query the DLO element and update it:
+Handle IDs are propagated in the serialized form of the DLO as an index into the commands array:
+
+```js
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["strokeRect", 50, 50, 50, 50],
+    ],
+    "handles": [
+        {"id": "rectHandle", "index": 0}
+    ]
+}
+```
+
+Handles can be retained from the original draw call as above, or obtained from a DLO by ID:
+
+```js
+rectHandle = ctx.getHandle("rectHandle");
+```
+
+Handles can be used to query the DLO command and update it:
 
 ```js
 rectHandle.getCommand(); // ["strokeRect", 50, 50, 50, 50]
@@ -130,11 +152,9 @@ rectHandle.update(100, 100, 100, 100);
 rectHandle.getCommand(); // ["strokeRect", 100, 100, 100, 100]
 ```
 
-The `update` method removes the command from the display list and replaces it with the equivalent command with the new arguments. Updates do not propagate to a Canvas context until the DLO is drawn on the context or updated into the context as above.
+The `update` method removes the command replaces it with the equivalent command with the new arguments in the DLO. Updates do not propagate to a Canvas context until the DLO is drawn on the context or updated into the context as above.
 
-> _**Why**: DLO anchors allow applications to modify DLOs with memory and performance that scales with the size of the anticipated updates rather than with the size of the DLO. This enables applications to update very large and complex scenes without needing to traverse the DLO for lookups or store indexes into the full DLO._
-
-> _**Open question**: How to get handles for elements in serialized DLOs? Might require IDs in the end._
+> _**Why**: "Out of band" handles like this allow applications to modify DLOs with memory and performance that scales with the size of the anticipated updates rather than with the size of the DLO. This enables applications to update very large and complex scenes without needing to traverse the DLO for lookups or store indexes into the full DLO. Handles also allow the implementation to more quickly parse the information it needs to draw a display list, without interposing IDs or other metadata into the command list._
 
 ### Text
 
@@ -148,7 +168,7 @@ The resulting DLO retains the text passed to the context:
 
 ```js
 {
-     "metadata": {
+    "metadata": {
         "version": "0.0.1"
     },
     "commands": [
