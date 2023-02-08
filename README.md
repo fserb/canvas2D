@@ -14,6 +14,7 @@ In active development
 
 - [**Modern filters**](spec/filters.md). Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
 
+- [**Display list object**](spec/display-list-object.md). Format and data structure for retained mode drawings, making Canvas apps faster, more accessible and indexable.
 
 
 Launched
