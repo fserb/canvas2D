@@ -15,6 +15,11 @@ HTML and the DOM provide a format and API respectively to manipulate content usi
 
 In contrast, HTML Canvas provides APIs to draw directly to logical and physical surfaces. These abstractions operate in "immediate mode."
 
+| Abstraction level | Immediate mode | Retained mode                       |
+|-------------------|----------------|-------------------------------------|
+| High level        | --             | HTML & DOM                          |
+| Low level         | 2D Canvas      | _**Proposal**: Display List Object_ |
+
 Retained mode has several benefits over immediate mode:
 
 * **Accessibility**: retained mode graphics can be inspected by the platform and exposed to accessibility tools
@@ -31,13 +36,13 @@ Use cases
 
 Currently, applications drawing text to Canvas are inaccessible to browsers, extensions and tools.
 
-A DLO allows applications to present graphics and text to the implementation in a retained mode object that can be inspected by the application, by related code (e.g. testing frameworks), by extensions, and by web services (e.g. search engine crawlers).
+A retained mode Canvas allows applications to present graphics and text to the implementation in a retained object that can be inspected by the application, by related code (e.g. testing frameworks), by extensions, and by web services (e.g. search engine crawlers).
 
 ### Incremental updates and animation
 
-Currently, applications animating graphics need to maintain display lists in user space, apply updates per frame, and redraw each frame to Canvas. Doing this work in JavaScript can be CPU intensive. Since new frames are drawn from user space, implementations must assume that changes could be made anywhere in the scene, making potential pipelines optimizations brittle and the resulting performance unpredictable.
+Currently, applications animating graphics need to maintain display lists in user space, apply updates per frame, and redraw each frame to Canvas. Doing this work in JavaScript can be CPU intensive. Since new frames are drawn from user space, implementations must assume that changes could be made anywhere in the scene, making potential pipeline optimizations brittle and the resulting performance unpredictable.
 
-A DLO allows the user space application to describe a scene, draw it, update only the parts of the DLO that need to be changed, and redraw it for the next frame. The implementation is able to optimize the update in various ways suitable to its pipeline.
+A retained mode Canvas allows the user space application to describe a scene, draw it, update only the parts of the scene that need to be changed, and redraw it for the next frame. With access to the retained display list from each draw call, the implementation is able to optimize the update in various ways suitable to its pipeline.
 
 This approach unburdens JavaScript execution, reduces call pressure along the API boundary and provides the opportunity for engines to support more complex graphics and animations at higher frame rates.
 
@@ -53,10 +58,13 @@ A retained mode Canvas should provide the following features:
 * **Scalable**: scaling a retained mode Canvas does not produce pixelation artifacts like with the current immediate mode Canvas
 * **Incrementally adoptable**: applications using the current Canvas APIs should be able to gradually migrate to using a retained mode Canvas
 
+
+_(the current draft of the explainer ends here; what follows serves only to aid in understanding the above requirements and is not intended to specify an API or implementation; the final API is expected to differ significantly from what is described below)_
+
+------------------------------------------------------------------
+
 Strawman Proposal
 -----------------
-
-_(this strawman is only to aid in understanding the above requirements; significant changes to the below are expected)_
 
 We propose a format and data structure pair (similar to HTML and the DOM) for low level drawing primitives.
 
@@ -78,10 +86,11 @@ A `2dRetained` context type is a drop-in replacement for the current `2d` contex
 A DLO can be obtained from a Canvas `2dRetained` context:
 
 ```js
+ctx.strokeRect(50, 50, 50, 50);
 dlo = ctx.getDisplayList();
 ```
 
-The DLO contains a capture of the drawing commands issued to the context since its creation (or since the last call to `reset()`) as a JSON payload:
+The DLO contains a capture of the drawing commands issued to the `2dRetained` context since its creation (or since the last call to `reset()`) as a JSON payload:
 
 ```js
 {
@@ -89,14 +98,14 @@ The DLO contains a capture of the drawing commands issued to the context since i
         "version": "0.0.1"
     },
     "commands": [
-        // ...
+        ["strokeRect", 50, 50, 50, 50]
     ]
 }
 ```
 
 ### Drawing and updating a Canvas with a DLO
 
-A Canvas `2dRetained` context can draw a DLO directly:
+A DLO can be drawn into a Canvas `2dRetained` context:
 
 ```js
 ctx.drawDisplayList(dlo);
@@ -110,19 +119,21 @@ A Canvas context of type `2dRetained` can be entirely _updated_ so that it match
 
 ```js
 ctx.updateDisplayList(dlo);
+console.assert(ctx.getDisplayList().equals(dlo));
 ```
 
 > _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
 
-### DLO handles
+### Groups
 
-Drawing against a handle allows the application to later modify certain commands in the DLO:
+A group is a context-within-a-context that allows commands to be grouped together, named and updated:
 
 ```js
-rectHandle = ctx.withHandle("rectHandle").strokeRect(50, 50, 50, 50);
+rectGroup = ctx.group("myRect");
+rectGroup.strokeRect(50, 50, 50, 50);
 ```
 
-Handle IDs are propagated in the serialized form of the DLO as an index into the commands array:
+The corresponding DLO in JSON format is:
 
 ```js
 {
@@ -130,31 +141,63 @@ Handle IDs are propagated in the serialized form of the DLO as an index into the
         "version": "0.0.1"
     },
     "commands": [
-        ["strokeRect", 50, 50, 50, 50],
-    ],
-    "handles": [
-        {"id": "rectHandle", "index": 0}
+        {
+            "group": "myRect",
+            "commands": [
+                ["strokeRect", 50, 50, 50, 50],
+            ]
+        }
     ]
 }
 ```
 
-Handles can be retained from the original draw call as above, or obtained from a DLO by ID:
+Groups can be obtained from a DLO by ID (for example when loading a serialized DLO):
 
 ```js
-rectHandle = ctx.getHandle("rectHandle");
+rectGroup = ctx.getGroup("myRect");
 ```
 
-Handles can be used to query the DLO command and update it:
+Groups act as Canvas `2dRetained` contexts and can be reset and redrawn:
 
 ```js
-rectHandle.getCommand(); // ["strokeRect", 50, 50, 50, 50]
-rectHandle.update(100, 100, 100, 100);
-rectHandle.getCommand(); // ["strokeRect", 100, 100, 100, 100]
+rectGroup.reset() // applies only to the group, not the entire DLO
+rectGroup.strokeRect(100, 100, 100, 100);
 ```
 
-The `update` method removes the command replaces it with the equivalent command with the new arguments in the DLO. Updates do not propagate to a Canvas context until the DLO is drawn on the context or updated into the context as above.
+Canvas methods called against a group are applied to the DLO immediately, but are _not_ applied to a Canvas context until `drawDisplayList()` or `updateDisplayList()` is called on the Canvas `2dRetained` context.
 
-> _**Why**: "Out of band" handles like this allow applications to modify DLOs with memory and performance that scales with the size of the anticipated updates rather than with the size of the DLO. This enables applications to update very large and complex scenes without needing to traverse the DLO for lookups or store indexes into the full DLO. Handles also allow the implementation to more quickly parse the information it needs to draw a display list, without interposing IDs or other metadata into the command list._
+Groups can be nested by creating new groups from a group handle:
+
+```js
+textSubGroup = rectGroup.group("myText");
+textSubGroup.strokeText("Hello World", 10, 50);
+```
+
+The corresponding JSON format for the above nested group is:
+
+```js
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        {
+            "group": "myRect",
+            "commands": [
+                ["strokeRect", 50, 50, 50, 50],
+                {
+                    "group": "myText",
+                    "commands": [
+                        ["strokeText", 10, 50]
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
+> _**Why**: Named groups allow applications to modify DLOs with memory and performance that scales with the size of the anticipated updates rather than with the size of the DLO. This enables applications to update very large and complex scenes without needing to traverse the DLO for lookups or store indexes into the full DLO._
 
 ### Text
 
