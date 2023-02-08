@@ -126,11 +126,13 @@ console.assert(ctx.getDisplayList().equals(dlo));
 
 ### Groups
 
-A group is a context-within-a-context that allows commands to be grouped together, named and updated:
+A group is a context-within-a-context that allows commands to be grouped together, named and updated. Groups can be created with an optional origin within the containing context and all coordinates within the group are relative to the group origin.
 
 ```js
-rectGroup = ctx.group("myRect");
-rectGroup.strokeRect(50, 50, 50, 50);
+rectGroup = ctx.group("myRect", 10, 10); // coordinates within the group are relative
+                                         // to (10, 10) in the enclosing context
+                                         
+rectGroup.strokeRect(50, 50, 50, 50);    // actually at (60, 60) in the top level context
 ```
 
 The corresponding DLO in JSON format is:
@@ -143,6 +145,7 @@ The corresponding DLO in JSON format is:
     "commands": [
         {
             "group": "myRect",
+            "at": [10, 10],
             "commands": [
                 ["strokeRect", 50, 50, 50, 50],
             ]
