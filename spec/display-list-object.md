@@ -122,6 +122,15 @@ ctx.updateDisplayList(dlo);
 console.assert(ctx.getDisplayList().equals(dlo));
 ```
 
+Drawing a DLO into the same originating Canvas context has performance proportional to the change between the contexts existing internal display list and the provided DLO. Drawing a DLO into a different Canvas context has performance proportional to the size of the DLO overall:
+
+```js
+dlo = ctx.getDisplayList();
+// ... changes made to dlo
+ctx.updateDisplayList(dlo);  // Runs in O(len(diff(ctx, dlo))) time
+ctx2.updateDisplayList(dlo); // Runs in O(len(dlo)) time
+```
+
 > _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
 
 ### Groups
@@ -131,7 +140,7 @@ A group is a context-within-a-context that allows commands to be grouped togethe
 ```js
 rectGroup = ctx.group("myRect", 10, 10); // coordinates within the group are relative
                                          // to (10, 10) in the enclosing context
-                                         
+
 rectGroup.strokeRect(50, 50, 50, 50);    // actually at (60, 60) in the top level context
 ```
 
@@ -160,6 +169,12 @@ Groups can be obtained from a DLO by ID (for example when loading a serialized D
 rectGroup = ctx.getGroup("myRect");
 ```
 
+An entire group can be moved by changing its origin:
+
+```js
+rectGroup.at = [20, 20];
+```
+
 Groups act as Canvas `2dRetained` contexts and can be reset and redrawn:
 
 ```js
@@ -172,8 +187,8 @@ Canvas methods called against a group are applied to the DLO immediately, but ar
 Groups can be nested by creating new groups from a group handle:
 
 ```js
-textSubGroup = rectGroup.group("myText");
-textSubGroup.strokeText("Hello World", 10, 50);
+rectSubGroup = rectGroup.group("mySubGroup"); // by default at (0, 0) in the containing group
+rectSubGroup.strokeRect(10, 10, 10, 50);
 ```
 
 The corresponding JSON format for the above nested group is:
@@ -186,12 +201,13 @@ The corresponding JSON format for the above nested group is:
     "commands": [
         {
             "group": "myRect",
+            "at": [20, 20],
             "commands": [
-                ["strokeRect", 50, 50, 50, 50],
+                ["strokeRect", 100, 100, 100, 100],
                 {
-                    "group": "myText",
+                    "group": "mySubGroup",
                     "commands": [
-                        ["strokeText", 10, 50]
+                        ["strokeRect", 10, 10, 10, 50]
                     ]
                 }
             ]
@@ -201,6 +217,56 @@ The corresponding JSON format for the above nested group is:
 ```
 
 > _**Why**: Named groups allow applications to modify DLOs with memory and performance that scales with the size of the anticipated updates rather than with the size of the DLO. This enables applications to update very large and complex scenes without needing to traverse the DLO for lookups or store indexes into the full DLO._
+
+### Variables
+
+Numeric values can be specified as variables with an initial value and efficiently updated later. Since variables are a retained-mode concept, they are only available on the display list object and not on the retained mode Canvas context.
+
+```js
+dlo = ctx.getDisplayList();
+myVar = dlo.variable("myHeight");
+myVar.setValue(50);
+dlo.drawRect(10, 10, 10, myVar);
+```
+
+The corresponding JSON format is:
+
+```js
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["drawRect", 10, 10, 10, {"var": "myHeight"}]
+    ],
+    "variables": [
+        {"var": "myHeight", "value": 50}
+    ]
+}
+```
+
+Variables can be updated, for example in a tight animation loop:
+
+```js
+dlo = ctx.getDisplayList();
+myVar = dlo.getVariable("myHeight");
+for (;;) {
+    // something something rAF
+    myVar.setValue(myVar.getValue() + 1);
+    ctx.updateDisplayList(dlo);
+}
+```
+
+Variables are owned by the enclosing group. The application can update variables in subgroups as follows:
+
+```js
+subgroup = dlo.getGroup("myGroup");
+subgroup.getVariable("myVar").setValue(50);
+```
+
+> _**Why**: Variables allow the application to delegate multiple updates to a DLO to the implementation, which can compute and apply the delta to a Canvas context more efficiently than the application._
+
+> _**Future**: The animation state machine proposal lets applications delegate even variable updates to the implementation, along pre-specified curves, allowing all frame-to-frame updates of a DLO animation to skip JavaScript and run at the native speed of the implementation._
 
 ### Text
 
