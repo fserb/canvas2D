@@ -315,25 +315,18 @@ The corresponding DLO in JSON format is:
 ```js
 {
      "metadata": {
-        "version": "0.0.1"
+        "version": "0.0.1",
     },
     "commands": [
         [
-            "drawFormattedText", [
-                "format",
-                [
-                    "The quick ",
-                    {
-                        "text": "brown",
-                        "style": "color: brown; font-weight: bold"
-                    },
-                    " fox jumps over the lazy dog."
-                ],
-                "font-style: italic",
-                350,
-            ],
-            50,
-            50
+            "fillFormattedText", [ 
+               "The quick ", {
+                    "text": "brown",
+                    "style": {color: "brown", fontWeight: "bold"},
+                  },
+                " fox jumps over the lazy dog."],
+              {fontStyle: "italic"},
+              50, 50, 350],
         ],
     ]
 }
