@@ -68,9 +68,9 @@ Strawman Proposal
 
 We propose a format and data structure pair (similar to HTML and the DOM) for low level drawing primitives.
 
-### Container
+### Context
 
-Programmatically, a DLO can be used with a Canvas context of type `2dRetained`:
+A new type of Canvas context called `2dRetained` is added:
 
 ```js
 const canvas = document.getElementById("my-canvas-element");
@@ -79,18 +79,19 @@ const ctx = canvas.getContext("2dRetained");
 
 A `2dRetained` context type is a drop-in replacement for the current `2d` context type and supports the same drawing methods.
 
-> _**Why**: A drop-in replacement context type (actually a superset) allows applications to incrementally adopt retained mode Canvas._
+As with existing `2d` contexts, the draw methods of `2dRetained` context immediately draw to the context's raster backing memory (and display if on screen). However a `2dRetained` context also retains the draw calls in an internal display list.
 
-### Reading a DLO
+> _**Why**: A drop-in replacement context type allows applications to incrementally adopt retained-mode Canvas. A separate context type ensures that the added internal storage of a retained display list is only required when requested by the application, rather than added to the memory footprint of all existing 2D Canvas contexts._
 
-A DLO can be obtained from a Canvas `2dRetained` context:
+### Accessing a DLO
+
+The retained display list of a Canvas `2dRetained` context can be accessed using `getDisplayList`:
 
 ```js
 ctx.strokeRect(50, 50, 50, 50);
 dlo = ctx.getDisplayList();
+dlo.toJSON();
 ```
-
-The DLO contains a capture of the drawing commands issued to the `2dRetained` context since its creation (or since the last call to `reset()`) as a JSON payload:
 
 ```js
 {
@@ -103,6 +104,92 @@ The DLO contains a capture of the drawing commands issued to the `2dRetained` co
 }
 ```
 
+### Modifying a DLO
+
+A DLO can be modified by issuing additional drawing commands. These commands are appended to the DLO.
+
+```js
+dlo.fillTest("Hello", 10, 10);
+dlo.toJSON();
+```
+
+
+```js
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["strokeRect", 50, 50, 50, 50],
+        ["fillText", "Hello", 10, 10]
+    ]
+}
+```
+
+Modifications to a DLO do not result in changes to any Canvas contexts or any displayed graphics. 
+
+> **Implementation note**: DLOs are inexpensive to create and modify. Implementations do not need to allocate raster backing memory. The draw methods of a DLO should run in amortized constant time.
+
+
+### Nesting DLOs
+
+DLOs can be nested by drawing a display list on another display list. This creates a tree structure that allows for faster incremental updates to a complex scene:
+
+```js
+const dlo2 = canvas.getContext("2dRetained");
+dlo2.fillText("World", 0, 0);
+
+dlo.drawDisplayList(dlo2, 30, 10);
+dlo.toJSON();
+```
+
+```js
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["strokeRect", 50, 50, 50, 50],
+        ["fillText", "Hello", 10, 10],
+        ["drawDisplayList", {
+            "commands": [
+                ["fillText", "World", 0, 0]
+            ]
+        }, 30, 10]
+    ]
+}
+```
+
+Drawing a display list onto another display list returns a handle that can be used to update the nested display list.
+
+```js
+handle = dlo.drawDisplayList(dlo2, 30, 10);
+handle.reset();
+handle.fillText("世界");
+dlo.toJSON();
+```
+
+```js
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["strokeRect", 50, 50, 50, 50],
+        ["fillText", "Hello", 10, 10],
+        ["drawDisplayList", {
+            "commands": [
+                ["fillText", "世界", 0, 0]
+            ]
+        }, 30, 10]
+    ]
+}
+```
+
+> **Implementation note**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing.
+
+> **TODO**: how to access a nested display list after loading a display list from JSON?
+
 ### Drawing and updating a Canvas with a DLO
 
 A DLO can be drawn into a Canvas `2dRetained` context:
@@ -111,16 +198,22 @@ A DLO can be drawn into a Canvas `2dRetained` context:
 ctx.drawDisplayList(dlo);
 ```
 
-Drawing a DLO applies the commands in the DLO on top of existing elements already drawn to the context. In other words, it appends the commands in the DLO into the internal command list of the context.
+Drawing a DLO applies the commands in the DLO immediately to the Canvas raster backing memory (and display if on screen). Drawing a DLO to a `2dRetained` context also appends the commands in the DLO to the internal command list of the context.
 
 > _**Why**: The append behavior of `drawDisplayList` aids in incremental adoption: applications can draw some parts of their scene with unmodified code that calls `ctx.draw*()` methods directly, while updated code draws other parts of the scene into a DLO which is then appended to the same context. The application can be updated over time to draw more of the scene into the DLO and issue fewer draw commands to the context._
 
-A Canvas context of type `2dRetained` can be entirely _updated_ so that it matches a given DLO:
+A Canvas context of type `2dRetained` can be entirely _updated_ to match a given DLO:
 
 ```js
 ctx.updateDisplayList(dlo);
 console.assert(ctx.getDisplayList().equals(dlo));
 ```
+
+Updating a `2dRetained` canvas context with a DLO immediately clears and applies the commands in the DLO to the Canvas raster backing memory (and display if on screen). Updating a context with a DLO also replaces the context's internal command list with the command list of the DLO.
+
+> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
+
+### Cross-context DLO
 
 Drawing a DLO into the same originating Canvas context has performance proportional to the change between the contexts existing internal display list and the provided DLO. Drawing a DLO into a different Canvas context has performance proportional to the size of the DLO overall:
 
@@ -131,105 +224,17 @@ ctx.updateDisplayList(dlo);  // Runs in O(len(diff(ctx, dlo))) time
 ctx2.updateDisplayList(dlo); // Runs in O(len(dlo)) time
 ```
 
-> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
-
-### Groups
-
-A group is a context-within-a-context that allows commands to be grouped together, named and updated. Groups can be created with an optional origin within the containing context and all coordinates within the group are relative to the group origin.
-
-```js
-rectGroup = ctx.group("myRect", 10, 10); // coordinates within the group are relative
-                                         // to (10, 10) in the enclosing context
-
-rectGroup.strokeRect(50, 50, 50, 50);    // actually at (60, 60) in the top level context
-```
-
-The corresponding DLO in JSON format is:
-
-```js
-{
-    "metadata": {
-        "version": "0.0.1"
-    },
-    "commands": [
-        {
-            "group": "myRect",
-            "at": [10, 10],
-            "commands": [
-                ["strokeRect", 50, 50, 50, 50],
-            ]
-        }
-    ]
-}
-```
-
-Groups can be obtained from a DLO by ID (for example when loading a serialized DLO):
-
-```js
-rectGroup = ctx.getGroup("myRect");
-```
-
-An entire group can be moved by changing its origin:
-
-```js
-rectGroup.at = [20, 20];
-```
-
-Groups act as Canvas `2dRetained` contexts and can be reset and redrawn:
-
-```js
-rectGroup.reset() // applies only to the group, not the entire DLO
-rectGroup.strokeRect(100, 100, 100, 100);
-```
-
-Canvas methods called against a group are applied to the DLO immediately, but are _not_ applied to a Canvas context until `drawDisplayList()` or `updateDisplayList()` is called on the Canvas `2dRetained` context.
-
-Groups can be nested by creating new groups from a group handle:
-
-```js
-rectSubGroup = rectGroup.group("mySubGroup"); // by default at (0, 0) in the containing group
-rectSubGroup.strokeRect(10, 10, 10, 50);
-```
-
-The corresponding JSON format for the above nested group is:
-
-```js
-{
-    "metadata": {
-        "version": "0.0.1"
-    },
-    "commands": [
-        {
-            "group": "myRect",
-            "at": [20, 20],
-            "commands": [
-                ["strokeRect", 100, 100, 100, 100],
-                {
-                    "group": "mySubGroup",
-                    "commands": [
-                        ["strokeRect", 10, 10, 10, 50]
-                    ]
-                }
-            ]
-        }
-    ]
-}
-```
-
-> _**Why**: Named groups allow applications to modify DLOs with memory and performance that scales with the size of the anticipated updates rather than with the size of the DLO. This enables applications to update very large and complex scenes without needing to traverse the DLO for lookups or store indexes into the full DLO._
 
 ### Variables
 
 Numeric values can be specified as variables with an initial value and efficiently updated later. Since variables are a retained-mode concept, they are only available on the display list object and not on the retained mode Canvas context.
 
 ```js
-dlo = ctx.getDisplayList();
 myVar = dlo.variable("myHeight");
 myVar.setValue(50);
 dlo.drawRect(10, 10, 10, myVar);
+dlo.toJSON();
 ```
-
-The corresponding JSON format is:
 
 ```js
 {
@@ -257,26 +262,18 @@ for (;;) {
 }
 ```
 
-Variables are owned by the enclosing group. The application can update variables in subgroups as follows:
-
-```js
-subgroup = dlo.getGroup("myGroup");
-subgroup.getVariable("myVar").setValue(50);
-```
-
 > _**Why**: Variables allow the application to delegate multiple updates to a DLO to the implementation, which can compute and apply the delta to a Canvas context more efficiently than the application._
 
-> _**Future**: The animation state machine proposal lets applications delegate even variable updates to the implementation, along pre-specified curves, allowing all frame-to-frame updates of a DLO animation to skip JavaScript and run at the native speed of the implementation._
+> _**Future**: The animation state machine proposal lets applications delegate even variable updates to the implementation, along pre-specified curves, allowing potentially all frame-to-frame updates of a DLO animation to run near the native speed of the implementation with minimal load on the JavaScript main thread._
 
 ### Text
 
 Drawing text is one of the main reasons to use a DLO as it allows the implementation to retain text in a Canvas for accessibility and indexability purposes.
 
 ```js
-ctx.strokeText("Hello World", 10, 50);
+dlo.strokeText("Hello World", 10, 50);
+dlo.toJSON();
 ```
-
-The resulting DLO retains the text passed to the context:
 
 ```js
 {
@@ -289,7 +286,7 @@ The resulting DLO retains the text passed to the context:
 }
 ```
 
-> _**Why**: Drawing text into a DLO allows that text to be accessed later by the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
+> _**Why**: Drawing text into a DLO or a `2dRetained` canvas context allows that text to be accessed later by the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
 
 ### Formatted Text
 
@@ -307,10 +304,9 @@ ftx = FormattedText.format( [   "The quick ",
                             ], "font-style: italic", 350 );
 
 // inspect ftxt to make layout decisions, adjust text as needed
-ctx.drawFormattedText(ftxt, 50, 50 );
+dlo.drawFormattedText(ftxt, 50, 50 );
+dlo.toJSON();
 ```
-
-The corresponding DLO in JSON format is:
 
 ```js
 {
@@ -331,8 +327,6 @@ The corresponding DLO in JSON format is:
     ]
 }
 ```
-
-Applications will typically make their layout decisions before serializing a DLO to JSON. E.g. an application may produce a DLO for common Canvas sizes, serialize and store them, and draw them directly for faster startup.
 
 > _**Why**: As above, drawing formatted text makes the text and its associated style information available to the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
 
