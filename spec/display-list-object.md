@@ -109,7 +109,7 @@ dlo.toJSON();
 A DLO can be modified by issuing additional drawing commands. These commands are appended to the DLO.
 
 ```js
-dlo.fillTest("Hello", 10, 10);
+dlo.fillText("Hello", 10, 10);
 dlo.toJSON();
 ```
 
@@ -209,20 +209,21 @@ ctx.updateDisplayList(dlo);
 console.assert(ctx.getDisplayList().equals(dlo));
 ```
 
-Updating a `2dRetained` canvas context with a DLO immediately clears and applies the commands in the DLO to the Canvas raster backing memory (and display if on screen). Updating a context with a DLO also replaces the context's internal command list with the command list of the DLO.
-
-> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
-
-### Cross-context DLO
-
-Drawing a DLO into the same originating Canvas context has performance proportional to the change between the contexts existing internal display list and the provided DLO. Drawing a DLO into a different Canvas context has performance proportional to the size of the DLO overall:
+Updating a `2dRetained` canvas context with a DLO is equivalent to resetting the context and drawing the DLO. However in reality, only the difference between the internal display list of the context and the DLO is applied to the canvas, which can be much faster for complex scenes and small updates.
 
 ```js
-dlo = ctx.getDisplayList();
-// ... changes made to dlo
-ctx.updateDisplayList(dlo);  // Runs in O(len(diff(ctx, dlo))) time
-ctx2.updateDisplayList(dlo); // Runs in O(len(dlo)) time
+// Equivalent approaches with different performance
+
+// 1. Runs in O(len(dlo)) time
+ctx.reset()
+ctx.drawDisplayList(dlo);
+
+// 2. Runs in O(len(diff(ctx, dlo))) time
+ctx.updateDisplayList(dlo);
 ```
+
+
+> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
 
 
 ### Variables
