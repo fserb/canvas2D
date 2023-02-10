@@ -186,7 +186,7 @@ dlo.toJSON();
 }
 ```
 
-> **Implementation note**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing.
+> **Implementation note**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing. DLO trees can implement copy-on-write semantics to reduce the memory overhead of accessing, modifying and drawing complex scenes.
 
 > **TODO**: how to access a nested display list after loading a display list from JSON?
 
