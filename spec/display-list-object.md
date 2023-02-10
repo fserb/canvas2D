@@ -265,6 +265,10 @@ for (;;) {
 
 > _**Why**: Variables allow the application to delegate multiple updates to a DLO to the implementation, which can compute and apply the delta to a Canvas context more efficiently than the application._
 
+> _**TODO**: Variables and nested display lists (expressions?)_
+
+> _**TODO**: Variables and embedded curves?_
+
 > _**Future**: The animation state machine proposal lets applications delegate even variable updates to the implementation, along pre-specified curves, allowing potentially all frame-to-frame updates of a DLO animation to run near the native speed of the implementation with minimal load on the JavaScript main thread._
 
 ### Text
