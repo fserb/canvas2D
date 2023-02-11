@@ -40,7 +40,7 @@ A retained mode Canvas allows applications to present graphics and text to the i
 
 ### Incremental updates and animation
 
-Currently, applications animating graphics need to maintain display lists in user space, apply updates per frame, and redraw each frame to Canvas. Doing this work in JavaScript can be CPU intensive. Since new frames are drawn from user space, implementations must assume that changes could be made anywhere in the scene, making potential pipeline optimizations brittle and the resulting performance unpredictable.
+Currently, applications animating graphics need to maintain display lists in user space, apply updates per frame, and redraw each frame to an HTML or off-screen Canvas. Doing this work in JavaScript can be CPU intensive. Since new frames are drawn from user space, implementations must assume that changes could be made anywhere in the scene, making potential pipeline optimizations brittle and the resulting performance unpredictable.
 
 A retained mode Canvas allows the user space application to describe a scene, draw it, update only the parts of the scene that need to be changed, and redraw it for the next frame. With access to the retained display list from each draw call, the implementation is able to optimize the update in various ways suitable to its pipeline.
 
