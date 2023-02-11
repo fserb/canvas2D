@@ -186,9 +186,39 @@ dlo.toJSON();
 }
 ```
 
-> **Implementation note**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing. DLO trees can implement copy-on-write semantics to reduce the memory overhead of accessing, modifying and drawing complex scenes.
+An optional identifier can be provided to `drawDisplayList`. The identifier is serialized with the display list and can be used to obtain handles after deserializing a saved display list.
 
-> **TODO**: how to access a nested display list after loading a display list from JSON?
+```js
+handle = dlo.drawDisplayList(dlo2, 30, 10, "mySubDisplayList");
+jsonDLO = dlo.toJSON();
+
+newDLO = DisplayList();
+newDLO.fromJSON(/* path to file */);
+newHandle = newDLO.getById("mySubDisplayList"); // handle == newHandle
+```
+
+```js
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["strokeRect", 50, 50, 50, 50],
+        ["fillText", "Hello", 10, 10],
+        ["drawDisplayList", {
+            "id": "mySubDisplayList",
+            "commands": [
+                ["fillText", "世界", 0, 0]
+            ]
+        }, 30, 10]
+    ]
+}
+```
+
+```js
+```
+
+> **Implementation note**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing. DLO trees can implement copy-on-write semantics to reduce the memory overhead of accessing, modifying and drawing complex scenes.
 
 ### Drawing and updating a Canvas with a DLO
 
