@@ -228,9 +228,6 @@ newHandle = newDLO.getById("mySubDisplayList"); // same sub-display list as abov
 }
 ```
 
-```js
-```
-
 > _**Why**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing. DLO trees can implement copy-on-write semantics to reduce the memory overhead of accessing, modifying and drawing complex scenes._
 
 ### Drawing and updating a Canvas with a DLO
@@ -324,7 +321,7 @@ dlo.toJSON();
 
 ### Changing canvas state
 
-Certain Canvas methods change the current drawing state of the Canvas and effect of all _subsequent_ draw method calls. These methods include grid transformations (`transform()`, `translate()`, `rotate()`, and `scale()`), default styles (`strokeStyle()`, `fillStyle()`, `lineWidth()`, `font()`, etc.), and the current clipping path.
+Certain Canvas methods change the current drawing state of the Canvas and affect all _subsequent_ draw method calls. These methods include grid transformations (`transform()`, `translate()`, `rotate()`, and `scale()`), default styles (`strokeStyle()`, `fillStyle()`, `lineWidth()`, `font()`, etc.), and the current clipping path.
 
 These methods can be called against a `2dretained` Canvas context and a DLO object to achieve the same effect.
 
@@ -332,8 +329,8 @@ These methods can be called against a `2dretained` Canvas context and a DLO obje
 dlo = DisplayList();
 dlo.fillText("Hello", 50, 50);
 
-dlo.translate(5, 5);           // DLO not empty, new sub-DLO created, cursor moved into it
-dlo.font("bold 48px serif");   // sub-DLO empty, so it is directly modified, cursor does not move
+dlo.translate(5, 5);           // DLO not empty, new sub-DLO created
+dlo.font("bold 48px serif");
 
 dlo.fillText("world", 45, 45); // translated origin and font style applied
 dlo.toJSON();
@@ -356,8 +353,6 @@ dlo.toJSON();
     ]
 }
 ```
-
-> _**Why**: the rule of modifying in-place an empty DLO allows state change methods to be grouped together on a single sub-DLO (as `translate()` and `font()` are in the above example) without having to create a new sub-DLO for each state change method._
 
 Since the sub-DLOs created by these functions are unavailable to the application, the implementation can optimize the tree of DLOs by moving state transformations up or down in the tree in a way that balances the tree while preserving Canvas semantics:
 
