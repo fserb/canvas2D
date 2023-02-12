@@ -144,13 +144,13 @@ Modifications to a DLO do not result in changes to any Canvas contexts or any di
 
 ### Nesting DLOs
 
-DLOs can be nested by drawing a display list on another display list. This creates a tree structure that allows for faster incremental updates to a complex scene:
+DLOs can be nested by inserting a display list inon another display list. This creates a tree structure that allows for faster incremental updates to a complex scene:
 
 ```js
-const dlo2 = canvas.getContext("2dretained");
-dlo2.fillText("World", 0, 0);
+dlo2 = DisplayList();
+dlo2.fillText("World", 30, 10);
 
-dlo.insert(dlo2, 30, 10);
+dlo.insert(dlo2);
 dlo.toJSON();
 ```
 
@@ -163,21 +163,20 @@ dlo.toJSON();
         ["strokeRect", 50, 50, 50, 50],
         ["fillText", "Hello", 10, 10],
         {
-            "transform": [1, 0, 30, 0, 1, 10, 0, 0, 1],
             "commands": [
-                ["fillText", "World", 0, 0]
+                ["fillText", "World", 30, 10]
             ]
         }
     ]
 }
 ```
 
-Drawing a display list onto another display list returns a handle that can be used to update the nested display list.
+Inserting a display list onto another display list returns a handle that can be used to update the nested display list.
 
 ```js
-handle = dlo.insert(dlo2, 30, 10);
+handle = dlo.insert(dlo2);
 handle.reset();
-handle.fillText("世界");
+handle.fillText("世界", 30, 10);
 dlo.toJSON();
 ```
 
@@ -190,19 +189,18 @@ dlo.toJSON();
         ["strokeRect", 50, 50, 50, 50],
         ["fillText", "Hello", 10, 10],
         {
-            "transform": [1, 0, 30, 0, 1, 10, 0, 0, 1],
             "commands": [
-                ["fillText", "世界", 0, 0]
+                ["fillText", "世界", 30, 10]
             ]
         }
     ]
 }
 ```
 
-An optional identifier can be provided to `drawDisplayList`. The identifier is serialized with the display list and can be used to obtain handles after deserializing a saved display list.
+An optional identifier can be provided to `insert()`. The identifier is serialized with the display list and can be used to obtain handles after deserializing a saved display list.
 
 ```js
-handle = dlo.insert(dlo2, 30, 10, "mySubDisplayList");
+handle = dlo.insert(dlo2, "mySubDisplayList");
 jsonDLO = dlo.toJSON();
 
 newDLO = DisplayList();
@@ -219,9 +217,8 @@ newHandle = newDLO.getById("mySubDisplayList"); // same sub-display list as abov
         ["strokeRect", 50, 50, 50, 50],
         ["fillText", "Hello", 10, 10],
         {
-            "transform": [1, 0, 30, 0, 1, 10, 0, 0, 1],
             "commands": [
-                ["fillText", "世界", 0, 0]
+                ["fillText", "世界", 30, 10]
             ],
             "id": "mySubDisplayList"
         }
@@ -275,7 +272,7 @@ The `save()` method creates a new unnamed sub-display list and moves the DLO's "
 ```js
 dlo.fillText("Hello", 50, 50);
 dlo.save();
-dlo.fillRect(0, 0, 25, 25); // written into a new sub-DLO
+dlo.fillRect(0, 0, 25, 25); // written into a new nested DLO
 dlo.toJSON();
 ```
 
@@ -330,7 +327,7 @@ These methods can be called against a `2dretained` Canvas context and a DLO obje
 dlo = DisplayList();
 dlo.fillText("Hello", 50, 50);
 
-dlo.translate(5, 5);           // DLO not empty, new sub-DLO created
+dlo.translate(5, 5);           // DLO not empty, new nested DLO created
 dlo.font("bold 48px serif");
 
 dlo.fillText("world", 45, 45); // translated origin and font style applied
@@ -355,11 +352,11 @@ dlo.toJSON();
 }
 ```
 
-Since the sub-DLOs created by these functions are unavailable to the application, the implementation can optimize the tree of DLOs by moving state transformations up or down in the tree in a way that balances the tree while preserving Canvas semantics:
+Since the nested DLOs created by these functions are unavailable to the application, the implementation can optimize the tree of DLOs by moving state transformations up or down in the tree in a way that balances the tree while preserving Canvas semantics:
 
 ```js
 dlo.font("");                           // clear font selection made above
-dlo.fillText("How are you?", 50, 100);  // implementation can move "world" to sub-DLO and put this text in parent
+dlo.fillText("How are you?", 50, 100);  // implementation can move "world" to nested DLO and put this text in parent
 dlo.toJSON();
 ```
 
