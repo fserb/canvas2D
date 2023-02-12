@@ -150,7 +150,7 @@ DLOs can be nested by drawing a display list on another display list. This creat
 const dlo2 = canvas.getContext("2dretained");
 dlo2.fillText("World", 0, 0);
 
-dlo.drawDisplayList(dlo2, 30, 10);
+dlo.insert(dlo2, 30, 10);
 dlo.toJSON();
 ```
 
@@ -175,7 +175,7 @@ dlo.toJSON();
 Drawing a display list onto another display list returns a handle that can be used to update the nested display list.
 
 ```js
-handle = dlo.drawDisplayList(dlo2, 30, 10);
+handle = dlo.insert(dlo2, 30, 10);
 handle.reset();
 handle.fillText("世界");
 dlo.toJSON();
@@ -202,7 +202,7 @@ dlo.toJSON();
 An optional identifier can be provided to `drawDisplayList`. The identifier is serialized with the display list and can be used to obtain handles after deserializing a saved display list.
 
 ```js
-handle = dlo.drawDisplayList(dlo2, 30, 10, "mySubDisplayList");
+handle = dlo.insert(dlo2, 30, 10, "mySubDisplayList");
 jsonDLO = dlo.toJSON();
 
 newDLO = DisplayList();
@@ -236,7 +236,7 @@ newHandle = newDLO.getById("mySubDisplayList"); // same sub-display list as abov
 A DLO can be drawn into a Canvas `2dretained` context:
 
 ```js
-ctx.drawDisplayList(dlo);
+ctx.insert(dlo);
 ```
 
 Drawing a DLO applies the commands in the DLO immediately to the Canvas raster backing memory (and display if on screen). Drawing a DLO to a `2dretained` context also appends the commands in the DLO to the internal command list of the context.
@@ -257,7 +257,7 @@ Updating a `2dretained` canvas context with a DLO is equivalent to resetting the
 
 // 1. Runs in O(len(dlo)) time
 ctx.reset()
-ctx.drawDisplayList(dlo);
+ctx.insert(dlo);
 
 // 2. Runs in O(len(diff(ctx, dlo))) time
 ctx.updateDisplayList(dlo);
