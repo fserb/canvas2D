@@ -59,10 +59,6 @@ A retained mode Canvas should provide the following features:
 * **Incrementally adoptable**: applications using the current Canvas APIs should be able to gradually migrate to using a retained mode Canvas
 
 
-_(the current draft of the explainer ends here; what follows serves only to aid in understanding the above requirements and is not intended to specify an API or implementation; the final API is expected to differ significantly from what is described below)_
-
-------------------------------------------------------------------
-
 Strawman Proposal
 -----------------
 
@@ -256,51 +252,6 @@ ctx.updateDisplayList(dlo);
 > _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
 
 
-### Variables
-
-Numeric values can be specified as variables with an initial value and efficiently updated later. Since variables are a retained-mode concept, they are only available on the display list object and not on the retained mode Canvas context.
-
-```js
-myVar = dlo.variable("myHeight");
-myVar.setValue(50);
-dlo.drawRect(10, 10, 10, myVar);
-dlo.toJSON();
-```
-
-```json
-{
-    "metadata": {
-        "version": "0.0.1"
-    },
-    "commands": [
-        ["drawRect", 10, 10, 10, {"var": "myHeight"}]
-    ],
-    "variables": [
-        {"var": "myHeight", "value": 50}
-    ]
-}
-```
-
-Variables can be updated, for example in a tight animation loop:
-
-```js
-dlo = ctx.getDisplayList();
-myVar = dlo.getVariable("myHeight");
-for (;;) {
-    // something something rAF
-    myVar.setValue(myVar.getValue() + 1);
-    ctx.updateDisplayList(dlo);
-}
-```
-
-> _**Why**: Variables allow the application to delegate multiple updates to a DLO to the implementation, which can compute and apply the delta to a Canvas context more efficiently than the application._
-
-> _**TODO**: Variables and nested display lists (expressions?)_
-
-> _**TODO**: Variables and embedded curves?_
-
-> _**Future**: The animation state machine proposal lets applications delegate even variable updates to the implementation, along pre-specified curves, allowing potentially all frame-to-frame updates of a DLO animation to run near the native speed of the implementation with minimal load on the JavaScript main thread._
-
 ### Text
 
 Drawing text is one of the main reasons to use a DLO as it allows the implementation to retain text in a Canvas for accessibility and indexability purposes.
@@ -372,6 +323,55 @@ dlo.toJSON();
 ```
 
 > _**Why**: As above, drawing formatted text makes the text and its associated style information available to the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
+
+In Discussion
+-------------
+
+### Variables
+
+Numeric values can be specified as variables with an initial value and efficiently updated later. Since variables are a retained-mode concept, they are only available on the display list object and not on the retained mode Canvas context.
+
+```js
+myVar = dlo.variable("myHeight");
+myVar.setValue(50);
+dlo.drawRect(10, 10, 10, myVar);
+dlo.toJSON();
+```
+
+```json
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["drawRect", 10, 10, 10, {"var": "myHeight"}]
+    ],
+    "variables": [
+        {"var": "myHeight", "value": 50}
+    ]
+}
+```
+
+Variables can be updated, for example in a tight animation loop:
+
+```js
+dlo = ctx.getDisplayList();
+myVar = dlo.getVariable("myHeight");
+for (;;) {
+    // something something rAF
+    myVar.setValue(myVar.getValue() + 1);
+    ctx.updateDisplayList(dlo);
+}
+```
+
+> _**Why**: Variables allow the application to delegate multiple updates to a DLO to the implementation, which can compute and apply the delta to a Canvas context more efficiently than the application._
+
+> _**TODO**: Variables and nested display lists (expressions?)_
+
+> _**TODO**: Variables and embedded curves?_
+
+> _**Future**: The animation state machine proposal lets applications delegate even variable updates to the implementation, along pre-specified curves, allowing potentially all frame-to-frame updates of a DLO animation to run near the native speed of the implementation with minimal load on the JavaScript main thread._
+
 
 Resources
 ---------
