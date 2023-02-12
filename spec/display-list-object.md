@@ -100,6 +100,7 @@ The retained display list of a Canvas `2dretained` context can be accessed using
 
 ```js
 dlo = ctx.getDisplayList();
+dlo.strokeRect(50, 50, 50, 50);
 dlo.toJSON();
 ```
 
