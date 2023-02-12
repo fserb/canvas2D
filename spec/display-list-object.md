@@ -34,17 +34,25 @@ Use cases
 
 ### Accessibility, Testability, Indexability
 
-Currently, applications drawing text to Canvas are inaccessible to browsers, extensions and tools.
+Currently, applications drawing text to Canvas are inaccessible to browsers, extensions and tools without the use of complex, brittle and resource-intensive approaches like OCR or ML.
 
-A retained mode Canvas allows applications to present graphics and text to the implementation in a retained object that can be inspected by the application, by related code (e.g. testing frameworks), by extensions, and by web services (e.g. search engine crawlers).
+A retained mode Canvas allows applications to present graphics and text to the implementation in a retained object that can be directly inspected by the application, by related code (e.g. testing frameworks), by extensions, and by web services (e.g. search engine crawlers). Text in this retained object remains in a machine readable UTF-8 format, with styling, positional and dimensional information preserved.
 
-### Incremental updates and animation
+It is expected that this will enable simple and robust pipelines for accessibility and indexabilty of Canvas-based content on the Web than is possible today.
 
-Currently, applications animating graphics need to maintain display lists in user space, apply updates per frame, and redraw each frame to an HTML or off-screen Canvas. Doing this work in JavaScript can be CPU intensive. Since new frames are drawn from user space, implementations must assume that changes could be made anywhere in the scene, making potential pipeline optimizations brittle and the resulting performance unpredictable.
+### Efficient UI updates
 
-A retained mode Canvas allows the user space application to describe a scene, draw it, update only the parts of the scene that need to be changed, and redraw it for the next frame. With access to the retained display list from each draw call, the implementation is able to optimize the update in various ways suitable to its pipeline.
+Currently, applications updating Canvas-based UI state must maintain their own representation of the UI to perform layout and compute invalidation. Although the application possesses a declarative representation of the new desired UI state, it must apply the needed changes imperatively and serially to a Canvas via the high-level, and comparatively slow, JavaScript APIs.
 
-This approach unburdens JavaScript execution, reduces call pressure along the API boundary and provides the opportunity for engines to support more complex graphics and animations at higher frame rates.
+A retained mode graphics object can serve as a common data structure for both applications and implementations to represent UI state. Updates to this shared representation can be performed by the application efficiently in batches and the resulting end state presented to the implementation for display. This allows the implementation to optimize invalidation and incremental paint using an efficient static internal representation, native platform code, hardware acceleration, and delegation to lower stages of the paint pipeline.
+
+### Animation
+
+Animation simply tightens the bounds and exacerbates the challenges identified above. In addition, applications must maintain and compute updates to a state machine to track progress through an animation's timeline. These state machine updates must then be applied to the graphical elements, which are then repainted to a Canvas.
+
+A retained mode Canvas allows the Canvas state to be [parameterized](#variables). Future proposals like the Animation State Machine will allow applications to delegate frame-to-frame updates of the Canvas state to the implementation as well.
+
+This approach unburdens JavaScript execution, reduces call pressure along the API boundary and provides the opportunity for animation engines to support more complex graphics and animations at higher frame rates.
 
 Requirements
 ------------
