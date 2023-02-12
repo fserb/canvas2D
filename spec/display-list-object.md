@@ -57,7 +57,7 @@ This approach unburdens JavaScript execution, reduces call pressure along the AP
 Requirements
 ------------
 
-A retained mode Canvas should provide the following features:
+The retained mode Canvas will provide the following features:
 
 * **Legible text**: text should be programmatically inspectable in human-understandable spans like formatted multi-line paragraphs (not glyphs, words or other fragments) without the need for OCR
 * **Styled text**: applied text styles should be programmatically inspectable (e.g. size, bold, etc.)
@@ -70,7 +70,14 @@ A retained mode Canvas should provide the following features:
 Strawman Proposal
 -----------------
 
-We propose a format and data structure pair (similar to HTML and the DOM) for low level drawing primitives.
+We propose a new lightweight low-level drawing object called the Display List Object (DLO) which stores draw commands but does not apply them to any raster backing memory. We further propose a new HTML Canvas context type called `2dretained` as a drawing interface with support for both immediate-mode draw commands and retained-mode DLOs:
+
+|        | Canvas `2d` context                                    | Canvas `2dretained` context <sup>new</sup>                            | Display List Object <sup>new</sup>       |
+|--------|--------------------------------------------------------|-----------------------------------------------------------------------|------------------------------------------|
+|        | _Draw commands applied to raster memory and discarded_ | _Draw commands applied to raster memory and appended to display list_ | _Draw commands appended to display list_ |
+| Memory | **High**: O(_canvas area_)                             | **High**: O(_canvas area_) + O(_# draw commands_)                     | **Low**: O(_# draw commands_)            |
+
+For most vector-based UI and graphics, O(_canvas area_) >> O(# draw commands).
 
 ### Context
 
