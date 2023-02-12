@@ -70,22 +70,22 @@ We propose a format and data structure pair (similar to HTML and the DOM) for lo
 
 ### Context
 
-A new type of Canvas context called `2dRetained` is added:
+A new type of Canvas context called `2dretained` is added:
 
 ```js
 const canvas = document.getElementById("my-canvas-element");
-const ctx = canvas.getContext("2dRetained");
+const ctx = canvas.getContext("2dretained");
 ```
 
-A `2dRetained` context type is a drop-in replacement for the current `2d` context type and supports the same drawing methods.
+A `2dretained` context type is a drop-in replacement for the current `2d` context type and supports the same drawing methods.
 
-As with existing `2d` contexts, the draw methods of `2dRetained` context immediately draw to the context's raster backing memory (and display if on screen). However a `2dRetained` context also retains the draw calls in an internal display list.
+As with existing `2d` contexts, the draw methods of `2dretained` context immediately draw to the context's raster backing memory (and display if on screen). However a `2dretained` context also retains the draw calls in an internal display list.
 
 > _**Why**: A drop-in replacement context type allows applications to incrementally adopt retained-mode Canvas. A separate context type ensures that the added internal storage of a retained display list is only required when requested by the application, rather than added to the memory footprint of all existing 2D Canvas contexts._
 
 ### Accessing a DLO
 
-The retained display list of a Canvas `2dRetained` context can be accessed using `getDisplayList`:
+The retained display list of a Canvas `2dretained` context can be accessed using `getDisplayList`:
 
 ```js
 ctx.strokeRect(50, 50, 50, 50);
@@ -136,7 +136,7 @@ Modifications to a DLO do not result in changes to any Canvas contexts or any di
 DLOs can be nested by drawing a display list on another display list. This creates a tree structure that allows for faster incremental updates to a complex scene:
 
 ```js
-const dlo2 = canvas.getContext("2dRetained");
+const dlo2 = canvas.getContext("2dretained");
 dlo2.fillText("World", 0, 0);
 
 dlo.drawDisplayList(dlo2, 30, 10);
@@ -222,24 +222,24 @@ newHandle = newDLO.getById("mySubDisplayList"); // same sub-display list as abov
 
 ### Drawing and updating a Canvas with a DLO
 
-A DLO can be drawn into a Canvas `2dRetained` context:
+A DLO can be drawn into a Canvas `2dretained` context:
 
 ```js
 ctx.drawDisplayList(dlo);
 ```
 
-Drawing a DLO applies the commands in the DLO immediately to the Canvas raster backing memory (and display if on screen). Drawing a DLO to a `2dRetained` context also appends the commands in the DLO to the internal command list of the context.
+Drawing a DLO applies the commands in the DLO immediately to the Canvas raster backing memory (and display if on screen). Drawing a DLO to a `2dretained` context also appends the commands in the DLO to the internal command list of the context.
 
 > _**Why**: The append behavior of `drawDisplayList` aids in incremental adoption: applications can draw some parts of their scene with unmodified code that calls `ctx.draw*()` methods directly, while updated code draws other parts of the scene into a DLO which is then appended to the same context. The application can be updated over time to draw more of the scene into the DLO and issue fewer draw commands to the context._
 
-A Canvas context of type `2dRetained` can be entirely _updated_ to match a given DLO:
+A Canvas context of type `2dretained` can be entirely _updated_ to match a given DLO:
 
 ```js
 ctx.updateDisplayList(dlo);
 console.assert(ctx.getDisplayList().equals(dlo));
 ```
 
-Updating a `2dRetained` canvas context with a DLO is equivalent to resetting the context and drawing the DLO. However in reality, only the difference between the internal display list of the context and the DLO is applied to the canvas, which can be much faster for complex scenes and small updates.
+Updating a `2dretained` canvas context with a DLO is equivalent to resetting the context and drawing the DLO. However in reality, only the difference between the internal display list of the context and the DLO is applied to the canvas, which can be much faster for complex scenes and small updates.
 
 ```js
 // Equivalent approaches with different performance
@@ -321,7 +321,7 @@ dlo.toJSON();
 }
 ```
 
-> _**Why**: Drawing text into a DLO or a `2dRetained` canvas context allows that text to be accessed later by the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
+> _**Why**: Drawing text into a DLO or a `2dretained` canvas context allows that text to be accessed later by the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
 
 ### Formatted Text
 
