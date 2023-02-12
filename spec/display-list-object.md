@@ -193,8 +193,8 @@ handle = dlo.drawDisplayList(dlo2, 30, 10, "mySubDisplayList");
 jsonDLO = dlo.toJSON();
 
 newDLO = DisplayList();
-newDLO.fromJSON(/* path to file */);
-newHandle = newDLO.getById("mySubDisplayList"); // handle == newHandle
+newDLO.fromJSON(jsonDLO);
+newHandle = newDLO.getById("mySubDisplayList"); // same sub-display list as above
 ```
 
 ```json
@@ -206,10 +206,10 @@ newHandle = newDLO.getById("mySubDisplayList"); // handle == newHandle
         ["strokeRect", 50, 50, 50, 50],
         ["fillText", "Hello", 10, 10],
         ["drawDisplayList", {
-            "id": "mySubDisplayList",
             "commands": [
                 ["fillText", "世界", 0, 0]
-            ]
+            ],
+            "id": "mySubDisplayList"
         }, 30, 10]
     ]
 }
@@ -306,7 +306,7 @@ for (;;) {
 Drawing text is one of the main reasons to use a DLO as it allows the implementation to retain text in a Canvas for accessibility and indexability purposes.
 
 ```js
-dlo.strokeText("Hello World", 10, 50);
+dlo.fillText("Hello World", 10, 50);
 dlo.toJSON();
 ```
 
@@ -316,7 +316,7 @@ dlo.toJSON();
         "version": "0.0.1"
     },
     "commands": [
-        ["strokeText", "Hello World", 10, 50],
+        ["fillText", "Hello World", 10, 50],
     ]
 }
 ```
@@ -338,8 +338,12 @@ ftxt = FormattedText.format( [   "The quick ",
                                 " fox jumps over the lazy dog." 
                             ], "font-style: italic", 350 );
 
-// inspect ftxt to make layout decisions, adjust text as needed
-dlo.drawFormattedText(ftxt, 50, 50 );
+
+// inspect ftxt to make layout decisions...
+// adjust text as needed (split, relayout, reformat)...
+
+// once it is ready, draw to DLO
+dlo.fillFormattedText(ftxt, 50, 50 );
 dlo.toJSON();
 ```
 
@@ -359,9 +363,9 @@ dlo.toJSON();
                 " fox jumps over the lazy dog."
             ],
             {"fontStyle": "italic"},
+            350,
             50,
-            50,
-            350
+            50
         ]
     ],
 }
