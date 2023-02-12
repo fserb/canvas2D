@@ -81,16 +81,16 @@ For most vector-based UI and graphics, O(_canvas area_) >> O(# draw commands).
 
 ### Context
 
-A new type of Canvas context called `2dretained` is added:
-
-```js
-const canvas = document.getElementById("my-canvas-element");
-const ctx = canvas.getContext("2dretained");
-```
 
 A `2dretained` context type is a drop-in replacement for the current `2d` context type and supports the same drawing methods.
 
 As with existing `2d` contexts, the draw methods of `2dretained` context immediately draw to the context's raster backing memory (and display if on screen). However a `2dretained` context also retains the draw calls in an internal display list.
+
+```js
+const canvas = document.getElementById("my-canvas-element");
+const ctx = canvas.getContext("2dretained");
+ctx.strokeRect(50, 50, 50, 50);
+```
 
 > _**Why**: A drop-in replacement context type allows applications to incrementally adopt retained-mode Canvas. A separate context type ensures that the added internal storage of a retained display list is only required when requested by the application, rather than added to the memory footprint of all existing 2D Canvas contexts._
 
@@ -99,7 +99,6 @@ As with existing `2d` contexts, the draw methods of `2dretained` context immedia
 The retained display list of a Canvas `2dretained` context can be accessed using `getDisplayList`:
 
 ```js
-ctx.strokeRect(50, 50, 50, 50);
 dlo = ctx.getDisplayList();
 dlo.toJSON();
 ```
@@ -117,7 +116,7 @@ dlo.toJSON();
 
 ### Modifying a DLO
 
-A DLO can be modified by issuing additional drawing commands. These commands are appended to the DLO.
+A DLO can be modified by issuing additional drawing commands using the methods of the DLO instead of the Canvas context. These commands are applied in retained mode and merely appended to the command list of the DLO.
 
 ```js
 dlo.fillText("Hello", 10, 10);
@@ -162,11 +161,12 @@ dlo.toJSON();
     "commands": [
         ["strokeRect", 50, 50, 50, 50],
         ["fillText", "Hello", 10, 10],
-        ["drawDisplayList", {
+        {
+            "transform": [1, 0, 30, 0, 1, 10, 0, 0, 1],
             "commands": [
                 ["fillText", "World", 0, 0]
             ]
-        }, 30, 10]
+        }
     ]
 }
 ```
@@ -188,11 +188,12 @@ dlo.toJSON();
     "commands": [
         ["strokeRect", 50, 50, 50, 50],
         ["fillText", "Hello", 10, 10],
-        ["drawDisplayList", {
+        {
+            "transform": [1, 0, 30, 0, 1, 10, 0, 0, 1],
             "commands": [
                 ["fillText", "世界", 0, 0]
             ]
-        }, 30, 10]
+        }
     ]
 }
 ```
@@ -216,12 +217,13 @@ newHandle = newDLO.getById("mySubDisplayList"); // same sub-display list as abov
     "commands": [
         ["strokeRect", 50, 50, 50, 50],
         ["fillText", "Hello", 10, 10],
-        ["drawDisplayList", {
+        {
+            "transform": [1, 0, 30, 0, 1, 10, 0, 0, 1],
             "commands": [
                 ["fillText", "世界", 0, 0]
             ],
             "id": "mySubDisplayList"
-        }, 30, 10]
+        }
     ]
 }
 ```
@@ -229,7 +231,7 @@ newHandle = newDLO.getById("mySubDisplayList"); // same sub-display list as abov
 ```js
 ```
 
-> **Implementation note**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing. DLO trees can implement copy-on-write semantics to reduce the memory overhead of accessing, modifying and drawing complex scenes.
+> _**Why**: nested DLOs create a tree of grouped draw commands which allows implementations to efficiently compute deltas between DLOs for fast incremental updates in the paint pipeline. This allows drawings to be updated with performance proportional to the change in the drawing rather than performance proportional to the size and complexity of the overall drawing. DLO trees can implement copy-on-write semantics to reduce the memory overhead of accessing, modifying and drawing complex scenes._
 
 ### Drawing and updating a Canvas with a DLO
 
@@ -241,7 +243,7 @@ ctx.drawDisplayList(dlo);
 
 Drawing a DLO applies the commands in the DLO immediately to the Canvas raster backing memory (and display if on screen). Drawing a DLO to a `2dretained` context also appends the commands in the DLO to the internal command list of the context.
 
-> _**Why**: The append behavior of `drawDisplayList` aids in incremental adoption: applications can draw some parts of their scene with unmodified code that calls `ctx.draw*()` methods directly, while updated code draws other parts of the scene into a DLO which is then appended to the same context. The application can be updated over time to draw more of the scene into the DLO and issue fewer draw commands to the context._
+> _**Why**: The append behavior of `drawDisplayList` aids in incremental adoption: applications can draw some parts of their scene with unmodified code that calls `ctx.draw*()` methods directly and get the expected immediate-mode behavior, while newer application code can draw other parts of the scene into a retained-mode DLO which is then appended to the same context. The application can be updated over time to draw more of the scene into the DLO and issue fewer draw commands to the context. Implementations have efficient access to the entire DLO when `drawDisplayList` is used, rather than receiving draw commands one by one from the application when using the `2d` Canvas context._
 
 A Canvas context of type `2dretained` can be entirely _updated_ to match a given DLO:
 
@@ -264,15 +266,18 @@ ctx.updateDisplayList(dlo);
 ```
 
 
-> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO to get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
+> _**Why**: The replacement behavior of `updateDisplayList` allows applications that do all drawing for a given context into a DLO and get maximum performance by presenting the desired DLO in its entirety to the implementation. The implementation can then efficiently determine and apply the needed updates to the context._
 
+### Save and Restore
 
-### Text
+> Note: In a retained-mode Canvas application, methods like `save()` and `restore()` should be considered deprecated and DLO-native applications should create scenes by assembling nested DLO's as described above.
 
-Drawing text is one of the main reasons to use a DLO as it allows the implementation to retain text in a Canvas for accessibility and indexability purposes.
+The `save()` method creates a new unnamed sub-display list and moves the DLO's "cursor" into it.
 
 ```js
-dlo.fillText("Hello World", 10, 50);
+dlo.fillText("Hello", 50, 50);
+dlo.save();
+dlo.fillRect(0, 0, 25, 25); // written into a new sub-DLO
 dlo.toJSON();
 ```
 
@@ -282,12 +287,108 @@ dlo.toJSON();
         "version": "0.0.1"
     },
     "commands": [
-        ["fillText", "Hello World", 10, 50],
+        ["fillText", "Hello", 50, 50],
+        {
+            "commands": [
+                ["fillRect", 0, 0, 25, 25]
+            ],
+        }
     ]
 }
 ```
 
-> _**Why**: Drawing text into a DLO or a `2dretained` canvas context allows that text to be accessed later by the application, extensions and the implementation, improving the accessibility of Canvas-based applications._
+The `restore()` method simply moves the "cursor" of the DLO out of the most recent sub-display list created by the `save()` method:
+
+```js
+dlo.restore();
+dlo.fillText("world", 100, 50);
+dlo.toJSON();
+```
+
+```json
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["fillText", "Hello", 50, 50],
+        {
+            "commands": [
+                ["fillRect", 0, 0, 25, 25]
+            ],
+        },
+        ["fillText", "world", 100, 50]
+    ]
+}
+```
+
+### Changing canvas state
+
+Certain Canvas methods change the current drawing state of the Canvas and effect of all _subsequent_ draw method calls. These methods include grid transformations (`transform()`, `translate()`, `rotate()`, and `scale()`), default styles (`strokeStyle()`, `fillStyle()`, `lineWidth()`, `font()`, etc.), and the current clipping path.
+
+These methods can be called against a `2dretained` Canvas context and a DLO object to achieve the same effect.
+
+```js
+dlo = DisplayList();
+dlo.fillText("Hello", 50, 50);
+
+dlo.translate(5, 5);           // DLO not empty, new sub-DLO created, cursor moved into it
+dlo.font("bold 48px serif");   // sub-DLO empty, so it is directly modified, cursor does not move
+
+dlo.fillText("world", 45, 45); // translated origin and font style applied
+dlo.toJSON();
+```
+
+```json
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["fillText", "Hello", 50, 50],
+        {
+            "transform": [1, 0, 5, 0, 1, 5, 0, 0, 1],
+            "font": "bold 48px serif",
+            "commands": [
+                ["fillText", "world", 45, 45]
+            ],
+        }
+    ]
+}
+```
+
+> _**Why**: the rule of modifying in-place an empty DLO allows state change methods to be grouped together on a single sub-DLO (as `translate()` and `font()` are in the above example) without having to create a new sub-DLO for each state change method._
+
+Since the sub-DLOs created by these functions are unavailable to the application, the implementation can optimize the tree of DLOs by moving state transformations up or down in the tree in a way that balances the tree while preserving Canvas semantics:
+
+```js
+dlo.font("");                           // clear font selection made above
+dlo.fillText("How are you?", 50, 100);  // implementation can move "world" to sub-DLO and put this text in parent
+dlo.toJSON();
+```
+
+```json
+{
+    "metadata": {
+        "version": "0.0.1"
+    },
+    "commands": [
+        ["fillText", "Hello", 50, 50],
+        {
+            "transform": [1, 0, 5, 0, 1, 5, 0, 0, 1],
+            "commands": [
+                {
+                    "font": "bold 48px serif",
+                    "commands": [
+                        ["fillText", "world", 45, 45]
+                    ]
+                },
+                ["fillText", "How are you?", 50, 100]
+            ],
+        },
+    ]
+}
+```
 
 ### Formatted Text
 
