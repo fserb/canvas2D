@@ -93,7 +93,7 @@ dlo = ctx.getDisplayList();
 dlo.toJSON();
 ```
 
-```js
+```json
 {
     "metadata": {
         "version": "0.0.1"
@@ -114,7 +114,7 @@ dlo.toJSON();
 ```
 
 
-```js
+```json
 {
     "metadata": {
         "version": "0.0.1"
@@ -143,7 +143,7 @@ dlo.drawDisplayList(dlo2, 30, 10);
 dlo.toJSON();
 ```
 
-```js
+```json
 {
     "metadata": {
         "version": "0.0.1"
@@ -169,7 +169,7 @@ handle.fillText("世界");
 dlo.toJSON();
 ```
 
-```js
+```json
 {
     "metadata": {
         "version": "0.0.1"
@@ -197,7 +197,7 @@ newDLO.fromJSON(/* path to file */);
 newHandle = newDLO.getById("mySubDisplayList"); // handle == newHandle
 ```
 
-```js
+```json
 {
     "metadata": {
         "version": "0.0.1"
@@ -267,7 +267,7 @@ dlo.drawRect(10, 10, 10, myVar);
 dlo.toJSON();
 ```
 
-```js
+```json
 {
     "metadata": {
         "version": "0.0.1"
@@ -310,7 +310,7 @@ dlo.strokeText("Hello World", 10, 50);
 dlo.toJSON();
 ```
 
-```js
+```json
 {
     "metadata": {
         "version": "0.0.1"
@@ -330,7 +330,7 @@ Applications drawing text to a Canvas often apply their own layout rules (e.g. a
 This proposal is meant to interoperate with the [WICG Canvas Formatted Text proposal](https://github.com/WICG/canvas-formatted-text) for handling formatted text. An application would usually create a formatted text metrics object, inspect the resulting dimensions to make application-specific layout decisions, and then draw the (possubly adjusted) text to a Canvas.
 
 ```js
-ftx = FormattedText.format( [   "The quick ", 
+ftxt = FormattedText.format( [   "The quick ", 
                                 {
                                     text: "brown",
                                     style: "color: brown; font-weight: bold"
@@ -343,23 +343,27 @@ dlo.drawFormattedText(ftxt, 50, 50 );
 dlo.toJSON();
 ```
 
-```js
+```json
 {
      "metadata": {
         "version": "0.0.1",
     },
     "commands": [
-        [
-            "fillFormattedText", [ 
-               "The quick ", {
+        "fillFormattedText", [
+            [
+                "the quick ",
+                {
                     "text": "brown",
-                    "style": {color: "brown", fontWeight: "bold"},
-                  },
-                " fox jumps over the lazy dog."],
-              {fontStyle: "italic"},
-              50, 50, 350],
-        ],
-    ]
+                    "style": "color: brown; font-weight: bold",
+                },
+                " fox jumps over the lazy dog."
+            ],
+            {"fontStyle": "italic"},
+            50,
+            50,
+            350
+        ]
+    ],
 }
 ```
 
