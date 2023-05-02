@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <title>Parametrized Display Lists</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@500&display=swap');
+
+body, html {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background-image: linear-gradient(140deg, rgba(165,142,251,1), rgba(233,191,248,1));
+  background-attachment: fixed;
+
+  font-family: 'Inter', sans-serif;
+  padding: 64px;
+  box-sizing: border-box;
+  font-size: 18px;
+  line-height: 1.5em;
+}
+
+main {
+  max-width: 1400px;
+  width: calc(100vw - 64px * 2);
+  margin: 0 auto;
+}
+
+h1 {
+  color: #222;
+  font-weight: bold;
+  font-size: 4em;
+  line-height: 1.5em;
+  margin: 0 0 50px 0;
+}
+
+section {
+  margin-top: 100px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: auto 55%;
+  grid-column-gap: 50px;
+}
+
+section h2 {
+  color: #222;
+  grid-area: 1 / 1 / 2 / 3;
+}
+
+code {
+  grid-area: 2 / 1 / 3 / 2;
+  color: #FFF;
+  padding: 30px 20px;
+  border-radius: 8px;
+  display: block;
+  font-size: 14px;
+  line-height: 1.5em;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  font-variant-ligatures: none;
+  letter-spacing: .1px;
+  tab-size: 2;
+  white-space: pre-wrap;
+  box-shadow: 4px 4px 4px rgba(0,0,0,0.25);
+}
+
+article {
+  grid-area: 2 / 2 / 3 / 3;
+  background-color: #FAFAFA;
+  border-radius: 10px;
+  box-shadow: 4px 4px 4px rgba(0,0,0,0.25);
+  box-sizing: border-box;
+}
+
+aside {
+  grid-area: 3 / 1 / 4 / 3;
+  margin-top: 50px;
+}
+
+footer {
+  height: 200px;
+}
+
+</style>
+
+
+<link rel="stylesheet" href="theme.css">
+<script src="highlight.min.js"></script>
+
+<script type="module">
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('code').forEach(el => {
+    el.innerHTML = el.innerHTML.trim();
+    hljs.highlightElement(el);
+  });
+});
+
+</script>
+</head>
+<body>
+<main>
+
+<h1>Parametrized Display Lists</h1>
+
+
+
+<section>
+  <h2>Squircle CSS</h2>
+<code class="language-css">
+#round-rect {
+  background-color: #BCAF9C;
+  border-radius: 5px;
+}
+
+#squircle-1 {
+  background-image:
+    url("squircle.dlo" param(color #DC3973) param(curve 10%));
+}
+
+#squircle-2 {
+  background-image:
+    url("squircle.dlo" param(color #36382E) param(curve 20%));
+}
+
+</code>
+<article style="padding-top: 50px">
+
+<svg style="width:250px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewbox="0 0 64 64"><rect transform="translate(8 8)" id="rounded-rectangle" x="0" y="0" height="48" width="48" rx="5"  fill="#BCAF9C" /></svg>
+
+<svg style="width: 250px" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M 0, 75 C 0, 0 0, 0 75, 0 S 150, 0 150, 75 150, 150 75, 150 0, 150 0, 75 " fill="#DC3973" transform="rotate(0, 100, 100) translate(25 25)"></path></svg>
+
+<svg style="width: 250px" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M 0, 75 C 0, 20.25 20.25, 0 75, 0 S 150, 20.25 150, 75 129.75, 150 75, 150 0, 129.75 0, 75 " fill="#36382E" transform="rotate(0, 100, 100) translate(25 25)"></path></svg>
+</article>
+<aside>There's not current way to parametrize SVG paths, so each path has to be manually constructed. With DLOs, a generic Squircle object can be created that supports any curvature and color.</aside>
+</section>
+
+
+
+<section>
+  <h2>Responsive design for shapes</h2>
+<code class="language-css">
+#original {
+  /*
+  The original SVG and DLO have identical outputs.
+  */
+  background-image: url("header.dlo");
+}
+
+#svg {
+  /*
+  SVG without preserving aspect ratio, will get stretched like
+  any other image.
+  */
+  background-image: url("header.svg");
+}
+
+#dlo {
+  /*
+  The display list object is able to parametrize on the size of
+  the object. In the example, the columns can remain fixed
+  size, while the center gets stretched to fill the area.
+  */
+  background-image: url("header.dlo");
+}
+
+</code>
+<article style="text-align: center; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); grid-auto-flow: column;">
+<div><p>Original<br><img style="height:100px" src="f1.svg"><br></div>
+<div><p>Stretched SVG<br><img style="width:337px;height:100px" src="f1.svg"><br></div>
+<div><p>Stretched DLO<br><img style="width:337px;height:100px" src="f2.svg"></div>
+
+<div><p>Original<br><img style="height:150px" src="hand1.svg"><br></div>
+<div><p>Stretched SVG<br><img style="width:365px;height:150px" src="hand1.svg"><br></div>
+<div><p>Stretched DLO<br><img style="width:365px;height:150px" src="hand2.svg"></div>
+
+</article>
+</section>
+
+
+
+
+
+<section>
+  <h2>Formatted Text Highlight</h2>
+<code class="language-js">
+
+
+
+</code>
+<article></article>
+</section>
+
+
+<section>
+  <h2>Button animation with states</h2>
+<code class="language-js"></code>
+<article></article>
+</section>
+
+
+<section>
+  <h2>Display List performance</h2>
+<code class="language-js"></code>
+<article></article>
+</section>
+
+<section>
+  <h2>Display List with parameters</h2>
+<code class="language-js"></code>
+<article></article>
+</section>
+
+<section>
+  <h2>Parametrized animations</h2>
+<code class="language-js"></code>
+<article></article>
+</section>
+
+
+<footer></footer>
+
+</main>
+</body>
+</html>
