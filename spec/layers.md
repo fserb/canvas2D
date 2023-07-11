@@ -42,7 +42,6 @@ A subset of the rendering state we'll call **layer rendering attributes** are ap
 - shadowOffsetY
 - shadowColor
 - shadowBlur
-- filter
 
 ## Example usage
 
@@ -189,16 +188,7 @@ is equivalent to:
 ```
 
 ### Interaction with `ctx.filter = ...;`
-Some Canvas2D implementations (Chrome and Firefox) shipped a feature where filters can be specified on the context directly, by doing `ctx.filter = <some filter>`. For those implementations, specifying a filter on both the context and the layer nests the two filters one into another. For instance,
-```
-ctx.filter = new CanvasFilter(my_filter1);
-ctx.beginLayer(my_filter2);
-```
-is the same as:
-```
-ctx.filter = 'none';
-ctx.beginLayer([my_filter2, my_filter1]);
-```
+Some Canvas2D implementations (Chrome and Firefox) shipped a feature where filters can be specified on the context directly, by doing `ctx.filter = <some filter>`. For those implementations, the context filter doesn't apply to layers. We do not want to encourage developers to use `ctx.filter` because that feature isn't supported by all browser and because using it is bad for performance. Indeed, `ctx.filter` requires the browser to implicitly create a layer for each individual draw calls. Specifying filters via `beginLayer` makes this cost explicit.
 
 See [here for an analysis of the alternatives considered](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.6u3unyd2kkpo).
 
