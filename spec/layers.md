@@ -20,9 +20,16 @@ This proposal adds a simple and efficient API for creating layers to be drawn as
 ## Proposal
 
 ```webidl
-interface mixin CanvasState {
-  // extending original
-  undefined beginLayer(optional CanvasFilter filter);
+typedef record<DOMString, any> CanvasFilterPrimitive;
+typedef (CanvasFilterPrimitive or
+         sequence<CanvasFilterPrimitive>) CanvasFilterInput;
+
+dictionary BeginLayerOptions {
+  CanvasFilterInput? filter = null;
+};
+
+interface mixin CanvasLayers {
+  undefined beginLayer(optional BeginLayerOptions options = {});
   undefined endLayer();
 };
 ```
@@ -31,7 +38,7 @@ Layers are created by calling `beginLayer()` on the context and terminated by ca
 
 Layers behave as if all the draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result). Image smoothing only applies to individual draw calls, not on layer result textures ([more on this below](#current-transformation-matrix-clip-and-image-smoothing)).
 
-Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters are specified as a [CanvasFilter](https://github.com/whatwg/html/issues/5621) object. [See below](#alternative-filter-api) for possible future improvements, [and here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.52ab2yqq661g) for a full analysis of alternatives considered.
+Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters are specified as a CanvasFilterInput object ([originally proposed here](https://github.com/whatwg/html/issues/5621)), essentially describing SVG filters with a JavaScript syntax. [See below](#possible-api-improvements) for possible future improvements, [and here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.52ab2yqq661g) for a full analysis of alternatives considered.
 
 `beginLayer()` and `endLayer()` save and restore the full current state of the context, similarly to `save()` and `restore()`. `beginLayer()`/`endLayer()` and `save()`/`restore()` must therefore operate on the same stack, which must keep track of both the layers and rendering state nesting.
 
@@ -52,7 +59,7 @@ const ctx = canvas.getContext('2d');
 
 ctx.globalAlpha = 0.5; 
 
-ctx.beginLayer(new CanvasFilter({filter: "gaussianBlur", stdDeviation: 4}));
+ctx.beginLayer({filter: {name: 'gaussianBlur', stdDeviation: 4}});
 
 ctx.fillStyle = 'rgba(225, 0, 0, 1)';
 ctx.fillRect(50, 50, 75, 50);
@@ -80,10 +87,37 @@ ctx.filter = 'blur(4px)';
 ctx.drawImage(canvas2, 0, 0);
 ```
 
-## Alternative filter API
-In addition to supporting `CanvasFilter`, we could support a syntactic sugar where `CanvasFilter` arguments could be passed directly to `beginLayer`, removing the need to create actual CanvasFilter objects:
+Filters can also be specified as a list, to chain filter effects:
 ```js
-undefined beginLayer(optional (CanvasFilter or object or FrozenArray<object>) filter);
+ctx.beginLayer({filter: [
+  {name: 'gaussianBlur', stdDeviation: 4},
+  {name: 'dropShadow', dx: 5, dy: 5}
+]});
+```
+
+## Possible API improvements
+In addition to supporting a `CanvasFilterInput` argument, we could also support a standalone `CanvasFilter` objects. This could provide optimization opportunities by allowing filter to be parsed and resolved once and reused in multiple layers. Note that filters like `dropShadow` can have colors that depends on the Canvas element style (e.g. `currentColor`, `color-scheme`, `forced-colors`, etc.), meaning that these filters can only be entirely resolved once they're used in a particular context.
+
+```webidl
+typedef record<DOMString, any> CanvasFilterPrimitive;
+typedef (CanvasFilterPrimitive or
+         sequence<CanvasFilterPrimitive>) CanvasFilterInput;
+
+[
+    Exposed=(Window, Worker)
+] interface CanvasFilter {
+    constructor(CanvasFilterInput init);
+   
+};
+
+dictionary BeginLayerOptions {
+  (CanvasFilterInput or CanvasFilter)? filter = null;
+};
+
+interface mixin CanvasLayers {
+  undefined beginLayer(optional BeginLayerOptions options = {});
+  undefined endLayer();
+};
 ```
 
 Example usage:
@@ -91,22 +125,27 @@ Example usage:
 // No filter:
 ctx.beginLayer();
 
-// CanvasFilter object:
-ctx.beginLayer(new CanvasFilter({filter: "gaussianBlur", stdDeviation: 4}));
-
 // Without intermediate CanvasFilter object:
-ctx.beginLayer({filter: "gaussianBlur", stdDeviation: 4});
+ctx.beginLayer({filter: {name: 'gaussianBlur', stdDeviation: 4}});
 
 // Composite filters without a CanvasFilter object:
-ctx.beginLayer([{filter: "gaussianBlur", stdDeviation: 4},
-                {filter: "turbulence", frequency: 0.05, numOctaves: 2}]);
+ctx.beginLayer(
+  {filter: [{name: 'gaussianBlur', stdDeviation: 4},
+            {name: 'dropShadow', dx: 5, dy: 5}]});
+
+// CanvasFilter object:
+const reusableFilter = new CanvasFilter(
+  {name: 'gaussianBlur', stdDeviation: 4});
+ctx1.beginLayer({filter: resuableFilter});
+ctx2.beginLayer({filter: resuableFilter});
 ```
 
-If we ever wanted to add more arguments to `beginLayer`, like `alpha` or `compositeOperation` however, we might want to revisit the `CanvasFilter` proposal to allow syntax like:
+This API would be easily extendable, allowing for more arguments to be added to `beginLayer` if we ever need to. For instance, beginLayer could accept parameters like `alpha`, `compositeOperation` or `antialiasing`:
 ```js
-ctx.beginLayer({filter: [{gaussianBlur: {stdDeviation: 2}},
-                         {turbulence: {frequency: 0.05, numOctaves: 2}}],
-                compositeOp: "source-over"});
+ctx.beginLayer({filter: [{name: 'gaussianBlur', stdDeviation: 2},
+                         {name: 'dropShadow', dx: 5, dy: 5}],
+                compositeOp: "source-over",
+                antialiasing: "disabled"});
 ```
 
 ## Corner cases
@@ -171,7 +210,7 @@ APIs like `ctx.getImageData()` or `ctx.drawImage(canvas)` effectively render a c
 ### Interaction with the current default path
 When drawing paths, only the calls that draw pixels (functions in the [CanvasDrawPath interface](https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawpath)) are impacted by layers. The [*current default path* not being part of the drawing state](https://html.spec.whatwg.org/multipage/canvas.html#drawing-paths-to-the-canvas), it's unaffected by the opening and closing of layers. Therefore, this code:
 ```js
-  ctx.beginLayer({filter: "gaussianBlur", stdDeviation: 2});
+  ctx.beginLayer({filter: {name: "gaussianBlur", stdDeviation: 2}});
   ctx.beginPath();
   ctx.rect(40, 40, 75, 50);
   ctx.stroke();
@@ -182,7 +221,7 @@ is equivalent to:
 ```js
   ctx.beginPath();
   ctx.rect(40, 40, 75, 50);
-  ctx.beginLayer({filter: "gaussianBlur", stdDeviation: 2});
+  ctx.beginLayer({filter: {name: "gaussianBlur", stdDeviation: 2}});
   ctx.stroke();
   ctx.endLayer();
 ```
