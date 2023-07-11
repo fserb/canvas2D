@@ -231,6 +231,35 @@ Some Canvas2D implementations (Chrome and Firefox) shipped a feature where filte
 
 See [here for an analysis of the alternatives considered](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.6u3unyd2kkpo).
 
+### Filter dimensions
+In SVG, filters can have their own dimensions, specified using the `width`, `height`, `x`, and `y` properties. Canvas layers can do the same things using clipping.
+
+For instance, the following two snippets produce the same results:
+```html
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="70" height="70" viewBox="0 0 70 70"
+     color-interpolation-filters="sRGB">
+  <filter id="blur" y="20" x="20" width="30" height="30" filterUnits="userSpaceOnUse">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
+  </filter>
+  <rect x="10" y="10" width="50" height="50" fill="magenta" filter="url(#blur)"/>
+</svg>
+```
+
+```js
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+const region = new Path2D();
+region.rect(20, 20, 30, 30);
+const ctx = canvas.getContext('2d');
+ctx.clip(region);
+ctx.beginLayer({filter: {name: "gaussianBlur", stdDeviation: 5}});
+ctx.clip(region);
+ctx.fillStyle = 'magenta';
+ctx.fillRect(10, 10, 50, 50);
+ctx.endLayer();
+```
+
 ## Alternatives considered
 
 A full analysis of all considered alternatives can be found in [this document](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#)
