@@ -177,7 +177,43 @@ One of the main goals of this proposal is to unlock a high performance code path
 Similarly, to allow browsers to optimize away layer resampling, the `imageSmoothingEnabled` and `imageSmoothingQuality` states cannot apply to the layer's result texture. In addition, if smoothing was to be applied on every layer output, the image quality would degrade on every layer nesting level we add. [See here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.qo8c65b01d75) for an example of the impact of either option on image quality.
 
 ### Unclosed layers
-When a frame is rendered (via any render opportunities: end of JS task, call to `drawImage(canvas, ...)`, etc.), a layer that was not closed will be rasterized, and in the next frame the layer starts empty and can still be used (and closed). This would behave as if at the end of the frame, the layer was closed and reopened, while keeping the same state as the original one. See an [analysis of alternatives considered here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.jz3qy4ebxhpr).
+Layers only gets filtered and composited to their parent bitmap when they are closed. Accessing the canvas bitmap pixels while a layer is opened is a malformed operation.
+
+APIs like `putImageData()` in particular are incompatible with unclosed layers. [By design](https://html.spec.whatwg.org/multipage/canvas.html#pixel-manipulation), `putImageData()` writes pixels to the canvas wholesale, bypassing globalAlpha, shadow attributes and globalCompositeOperation. To be consistent with this, `putImageData()` must also bypass layers and write directly to the canvas underneath, or else, the pixels written would be affected by the layer's filter, blending or compositing. `putImageData()` can't however sidestep the layer and write directly to the canvas because when `endLayer()` is called, the layer content would overwrite the pixels written by `putImageData()`. For instance:
+```
+ctx.beginLayer();
+ctx.fillRect(0, 0, 100, 100);
+
+// Draws `img` to the canvas:
+ctx.putImageData(img, 0, 0);
+
+// When closing the layer, the pixels drawn by `putImageData` effectively
+// gets overwritten by a previous `fillRect`.
+ctx.endLayer();
+```
+
+To give a clear message to web developers, and make sure web sites do not start depending on degenerate API uses, all APIs directly accessing the canvas bitmap pixels while layers are opened must throw an exception or returned a failed promise. Examples APIs are:
+
+Raises an exception:
+ - `CanvasRenderingContext2D.drawImage(canvas, 0, 0);`  (reading pixels from `canvas`).
+ - `CanvasRenderingContext2D.getImageData(...)`
+ - `CanvasRenderingContext2D.putImageData(...)`
+ - `HTMLCanvasElement.toBlob(...)`
+ - `HTMLCanvasElement.toDataURL(...)`
+
+Returns failed promise:
+ - `createImageBitmap(canvas)`
+ - `OffscreenCanvas.convertToBlob(...)`
+
+The canvas bitmap is also read on render opportunities, when the script ends for instance, or if it pauses on an `await` statement. Because there is no way to raise an exception in these cases, we have no other choice but present the content of the canvas regardless of unclosed layers. This already works with the `save()`/`restore()` API: the canvas can be presented even if there are pending saves and implementations have to maintain the canvas state stack alive across JavaScript task executions. To be consistent with this, pending layers must also be kept alive across tasks.
+
+This leaves us with two options regarding the content of the canvas presented when there are unclosed layers:
+ 1. Present the content of unclosed layers, by automatically closing all layers at the end of the JavaScript task, reading the canvas output bitmap and then restore canvas state stack (reopening the layers) before the next task starts executing.
+ 2. Don't present unclosed layers, but hold onto their content so that it could be rendered in a future frame if layers are finally closed.
+
+Neither options are perfect, but more importantly, this is not a feature, it's the handling of an invalid API use. For that reason, we should avoid solutions that adds complexity or lowers performance. In that sense, option 1 is preferred because it adds no complexity or overhead beyond the state stack management we already have to do. Option 2 on the other hand would require adding support for partial flushes, rending all draw calls up to the first `beginLayer` and then carrying over a potentially large list of pending draw calls across JavaScript tasks.
+
+See an [analysis of alternatives considered here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.jz3qy4ebxhpr).
 
 ### Unmatched calls
 An `endLayer()` without a `beginLayer()` is considered malformed and throws an exception. See [here for an analysis of the alternatives considered](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.dilmo33w0023).
@@ -197,12 +233,6 @@ beginLayer(); restore();  // No matching save() in current layer.
 
 ### Call to `ctx.clearRect()` inside layer
 [By design](https://html.spec.whatwg.org/multipage/canvas.html#drawing-rectangles-to-the-bitmap) `ctx.clearRect` behaves like `crx.fillRect`, with the difference being that it paints with transparent black instead of the current fill style. Therefore, calling `ctx.clearRect()` inside a layer writes transparent black to the pixels in that layer, not directly in the parent canvas or layer.
-
-### Reading canvas content with unclosed layers
-APIs like `ctx.getImageData()` or `ctx.drawImage(canvas)` effectively render a canvas frame. As described in the [Unclosed layers section](#unclosed-layers), any frame rendered while layers are active has the same effect as closing the layers, rendering the frame and re-opening the layers with an empty content but keeping their original layer rendering states.
-
-### Call to `ctx.putImageData()` inside layer
-[By design](https://html.spec.whatwg.org/multipage/canvas.html#pixel-manipulation), `putImageData()` writes pixels to the canvas wholesale, bypassing globalAlpha, shadow attributes and globalCompositeOperation. To be consistent with this, `putImageData()` must also bypass layers and write directly to the canvas underneath, or else, the pixels written would be affected by the layer's filter, blending or compositing. As described in the [Unclosed layers section](#unclosed-layers), calling `ctx.putImageData()` while unclosed layers exists has the same effects as closing the layers, calling `crx.putImageData()` and re-opening the layers with an empty content but keeping their original layer rendering states.
 
 ### Call to `ctx.drawImage()` inside layer
 [By design](https://html.spec.whatwg.org/multipage/canvas.html#drawing-images), `drawImage()` is affected by globalAlpha, attributes and globalCompositeOperation. To be consistent, calling `drawImage()` inside a layer writes the image to that layer, which will in turn be filtered/blended/composited to the parent.
