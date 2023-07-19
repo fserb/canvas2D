@@ -192,7 +192,7 @@ ctx.putImageData(img, 0, 0);
 ctx.endLayer();
 ```
 
-To give a clear message to web developers, and make sure web sites do not start depending on degenerate API uses, all APIs directly accessing the canvas bitmap pixels while layers are opened must throw an exception or returned a failed promise. Examples APIs are:
+To give a clear message to web developers, and make sure web sites do not start depending on degenerate API uses, all APIs directly accessing the canvas bitmap pixels while layers are opened must throw an exception or returned a failed promise. Example APIs are:
 
 Raises an exception:
  - `CanvasRenderingContext2D.drawImage(canvas, 0, 0);`  (reading pixels from `canvas`).
@@ -211,7 +211,7 @@ This leaves us with two options regarding the content of the canvas presented wh
  1. Present the content of unclosed layers, by automatically closing all layers at the end of the JavaScript task, reading the canvas output bitmap and then restore canvas state stack (reopening the layers) before the next task starts executing.
  2. Don't present unclosed layers, but hold onto their content so that it could be rendered in a future frame if layers are finally closed.
 
-Neither options are perfect, but more importantly, this is not a feature, it's the handling of an invalid API use. For that reason, we should avoid solutions that adds complexity or lowers performance. In that sense, option 1 is preferred because it adds no complexity or overhead beyond the state stack management we already have to do. Option 2 on the other hand would require adding support for partial flushes, rending all draw calls up to the first `beginLayer` and then carrying over a potentially large list of pending draw calls across JavaScript tasks.
+Neither options are perfect, but more importantly, this is not a feature, it's the handling of an invalid API use. For that reason, we should avoid solutions that adds complexity or lowers performance. In that sense, option 1 is preferred because it adds no complexity or overhead beyond the state stack management we already have to do. Option 2 on the other hand would require adding support for partial flushes, rendering all draw calls up to the first `beginLayer` and then carrying over a potentially large list of pending draw calls across JavaScript tasks. Regardless, a console warning message can be printed to warn developers that they are presenting unclosed layers.
 
 See an [analysis of alternatives considered here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.jz3qy4ebxhpr).
 
