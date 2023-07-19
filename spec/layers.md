@@ -213,7 +213,7 @@ This leaves us with two options regarding the content of the canvas presented wh
 
 Neither options are perfect, but more importantly, this is not a feature, it's the handling of an invalid API use. For that reason, we should avoid solutions that adds complexity or lowers performance. In that sense, option 1 is preferred because it adds no complexity or overhead beyond the state stack management we already have to do. Option 2 on the other hand would require adding support for partial flushes, rendering all draw calls up to the first `beginLayer` and then carrying over a potentially large list of pending draw calls across JavaScript tasks. Regardless, a console warning message can be printed to warn developers that they are presenting unclosed layers.
 
-See an [analysis of alternatives considered here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.jz3qy4ebxhpr).
+See an [analysis of alternatives considered here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.kwadqd24dwtw).
 
 ### Unmatched calls
 An `endLayer()` without a `beginLayer()` is considered malformed and throws an exception. See [here for an analysis of the alternatives considered](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.dilmo33w0023).
