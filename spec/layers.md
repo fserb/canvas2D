@@ -229,7 +229,7 @@ beginLayer(); restore();  // No matching save() in current layer.
 ```
 
 ### Call to `ctx.reset()` inside layer
-[By design](https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-reset), calling `ctx.reset()` resets the whole canvas and brings it back to its original default state. This includes clearing the context's drawing state stack. Therefore, calling `ctx.reset()` after calls to `ctx.beginLayer()` must discard all pending layers. As described in the [Unclosed Layers section](#unclosed-layers), doing `ctx.beginLayer(); ctx.reset(); ctx.endLayer();` is malformed and throws an exception since `endLayer()` has no matching `beginLayer()` (it was discarded by `reset()`). 
+[By design](https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-reset), calling `ctx.reset()` resets the whole canvas and brings it back to its original default state. This includes clearing the context's drawing state stack. Therefore, calling `ctx.reset()` after calls to `ctx.beginLayer()` must discard all pending layers. As described in the [Unclosed Layers section](#unclosed-layers), doing `ctx.beginLayer(); ctx.reset(); ctx.endLayer();` is malformed with `endLayer()` throwing an exception since `endLayer()` has no matching `beginLayer()` (it was discarded by `reset()`).
 
 ### Call to `ctx.clearRect()` inside layer
 [By design](https://html.spec.whatwg.org/multipage/canvas.html#drawing-rectangles-to-the-bitmap) `ctx.clearRect` behaves like `crx.fillRect`, with the difference being that it paints with transparent black instead of the current fill style. Therefore, calling `ctx.clearRect()` inside a layer writes transparent black to the pixels in that layer, not directly in the parent canvas or layer.
