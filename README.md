@@ -16,6 +16,8 @@ In active development
 
 - [**Display list object**](spec/display-list-object.md). Format and data structure for retained mode drawings, making Canvas apps faster, more accessible and indexable.
 
+- [**Mesh2D**](spec/mesh2d.md). Draw a large number of texture-mapped triangles efficiently.
+
 
 Launched
 --------
