@@ -20,7 +20,7 @@ Mapping textures to complex 2D shapes is a useful technique for implementing var
 ![mesh deformation](../images/mesh2d-deformation.png)
 
 ### 2D shape animations
-Currently, shapes can be animated as 2D paths - which offer great geometric accuracy, but very few fill options (solid color, gradientsm patterns).
+Currently, shapes can be animated as 2D paths - which offer great geometric accuracy, but very few fill options (solid color, gradients, patterns).
 
 Meshes enable natural animation of heavily textured shapes, as they seamlessly translate the geometric transformation to texture space.
 
