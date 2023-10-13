@@ -200,6 +200,7 @@ Raises an exception:
  - `CanvasRenderingContext2D.putImageData(...)`
  - `HTMLCanvasElement.toBlob(...)`
  - `HTMLCanvasElement.toDataURL(...)`
+ - `OffscreenCanvas.transferToImageBitmap()`
 
 Returns failed promise:
  - `createImageBitmap(canvas)`
