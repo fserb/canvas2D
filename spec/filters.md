@@ -1,6 +1,6 @@
 Feature
 =======
-**Status**: explainer.
+**Status**: deprecated.
 
 A javascript interface for using SVG filters within canvas.
 

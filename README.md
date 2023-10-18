@@ -12,8 +12,6 @@ In active development
 
 - [**Layers**](spec/layers.md). Support layers in canvas, that will be drawn in one, allowing effects only possible with auxiliary canvases.
 
-- [**Modern filters**](spec/filters.md). Support composited filters, create a filter object that can be updated, and support more SVG-like filters.
-
 - [**Display list object**](spec/display-list-object.md). Format and data structure for retained mode drawings, making Canvas apps faster, more accessible and indexable.
 
 - [**Mesh2D**](spec/mesh2d.md). Draw a large number of texture-mapped triangles efficiently.
@@ -63,3 +61,5 @@ Dropped ideas
 - [**Color input**](spec/color-input.md). support for new color input on Canvas.
 
 - [**Batch drawImage**](spec/batch-drawimage.md). Support for multiple images being drawn within a single API call.
+
+- [**Modern filters**](spec/filters.md). Support composited filters, create a filter object that can be updated, and support more SVG-like filters. Superseded by [layers](spec/layers.md).
