@@ -18,6 +18,7 @@ In active development
 
 - [**WebGPU Integration**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU.
 
+- [**WebGPU Shaders**](spec/shaders.md). Allow for WebGPU shaders to be used as Canvas2D layers filters.
 
 Launched
 --------

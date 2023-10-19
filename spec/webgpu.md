@@ -26,7 +26,7 @@ OffscreenCanvasRenderingContext2D includes Canvas2DWebGPU;
 
 `moveToWebGPU()` returns a [GPUTexture](https://gpuweb.github.io/gpuweb/#gputexture) that can be used in a WebGPU pipeline. After the function is called, the Canvas2D context is unavailable, with all function calls throwing an InvalidStateError when called.
 
-`moveFromWebGPU()` receives a WebGPU Texture (that has previoulsy been created via `moveToWebGPU()`), makes it unavailable to use on WebGPU, and restures the Canvas2D context.
+`moveFromWebGPU()` receives a WebGPU Texture (that has previoulsy been created via `moveToWebGPU()`), makes it unavailable to use on WebGPU, and restores the Canvas2D context.
 
 
 ### Open issues and questions
@@ -86,6 +86,7 @@ const device = await (await navigator.gpu.requestAdapter()).requestDevice();
 const pipeline = device.createRenderPipeline(...);
 
 const commandEncoder = device.createCommandEncoder();
+
 const renderPassColorAttachment = {
   view: canvasTexture.createView(),
   clearValue: {r: 0, g: 0, b: 0, a: 1},
@@ -106,7 +107,6 @@ ctx.moveFromWebGPU(canvasTexture);
 // ... continue Canvas2D work.
 ctx.fillRect(1, 1, 1, 1);
 ```
-
 
 References
 ----------
