@@ -41,8 +41,6 @@ with some limitations. Namely:
 - there's always a texture available for sampling with the layer content.
 - extra textures and samplers can be passed as uniforms on filter usage.
 
-Polyfill for the current proposal [here](../webgpu/webgpu-polyfill.js).
-
 ### Open issues and questions
 
 

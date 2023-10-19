@@ -34,6 +34,7 @@ OffscreenCanvasRenderingContext2D includes Canvas2DWebGPU;
 
 The `GPUTExture` returned has the `GPUTextureUsage` set to `TEXTURE_BINDING | RENDER_ATTACHMENT`.
 
+Polyfill for the current proposal [here](../webgpu/webgpu-polyfill.js).
 
 ### Open issues and questions
 
