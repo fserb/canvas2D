@@ -1,5 +1,3 @@
-// interop.js
-
 for (const ctx of [CanvasRenderingContext2D, OffscreenCanvasRenderingContext2D]) {
 
   ctx.prototype.getTextureFormat = function() {
