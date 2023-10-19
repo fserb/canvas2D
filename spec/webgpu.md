@@ -28,8 +28,10 @@ OffscreenCanvasRenderingContext2D includes Canvas2DWebGPU;
 
 `moveFromWebGPU()` receives a WebGPU Texture (that has previoulsy been created via `moveToWebGPU()`), makes it unavailable to use on WebGPU, and restures the Canvas2D context.
 
+
 ### Open issues and questions
 
+- What about the GPUTexture texture format? Can we guarantee something?
 
 Example usage
 -------------
