@@ -16,6 +16,8 @@ In active development
 
 - [**Mesh2D**](spec/mesh2d.md). Draw a large number of texture-mapped triangles efficiently.
 
+- [**WebGPU Integration**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU.
+
 
 Launched
 --------
