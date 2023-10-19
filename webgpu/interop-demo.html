@@ -1,0 +1,326 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+
+<p>Use a canvas 2D as a texture in WebGPU</p>
+
+<canvas id=c width=256 height=256></canvas>
+
+<canvas id=d width=256 height=256></canvas>
+
+<script type="module">
+import "./webgpu-polyfill.js";
+
+import { mat4, vec3 } from './wgpu-matrix.module.js';
+
+const cubeVertexSize = 4 * 10; // Byte size of one cube vertex.
+const cubePositionOffset = 0;
+const cubeColorOffset = 4 * 4; // Byte offset of cube vertex color attribute.
+const cubeUVOffset = 4 * 8;
+const cubeVertexCount = 36;
+
+// prettier-ignore
+const cubeVertexArray = new Float32Array([
+  // float4 position, float4 color, float2 uv,
+  1, -1, 1, 1,   1, 0, 1, 1,  0, 1,
+  -1, -1, 1, 1,  0, 0, 1, 1,  1, 1,
+  -1, -1, -1, 1, 0, 0, 0, 1,  1, 0,
+  1, -1, -1, 1,  1, 0, 0, 1,  0, 0,
+  1, -1, 1, 1,   1, 0, 1, 1,  0, 1,
+  -1, -1, -1, 1, 0, 0, 0, 1,  1, 0,
+
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+  1, -1, 1, 1,   1, 0, 1, 1,  1, 1,
+  1, -1, -1, 1,  1, 0, 0, 1,  1, 0,
+  1, 1, -1, 1,   1, 1, 0, 1,  0, 0,
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+  1, -1, -1, 1,  1, 0, 0, 1,  1, 0,
+
+  -1, 1, 1, 1,   0, 1, 1, 1,  0, 1,
+  1, 1, 1, 1,    1, 1, 1, 1,  1, 1,
+  1, 1, -1, 1,   1, 1, 0, 1,  1, 0,
+  -1, 1, -1, 1,  0, 1, 0, 1,  0, 0,
+  -1, 1, 1, 1,   0, 1, 1, 1,  0, 1,
+  1, 1, -1, 1,   1, 1, 0, 1,  1, 0,
+
+  -1, -1, 1, 1,  0, 0, 1, 1,  0, 1,
+  -1, 1, 1, 1,   0, 1, 1, 1,  1, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
+  -1, -1, -1, 1, 0, 0, 0, 1,  0, 0,
+  -1, -1, 1, 1,  0, 0, 1, 1,  0, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
+
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+  -1, 1, 1, 1,   0, 1, 1, 1,  1, 1,
+  -1, -1, 1, 1,  0, 0, 1, 1,  1, 0,
+  -1, -1, 1, 1,  0, 0, 1, 1,  1, 0,
+  1, -1, 1, 1,   1, 0, 1, 1,  0, 0,
+  1, 1, 1, 1,    1, 1, 1, 1,  0, 1,
+
+  1, -1, -1, 1,  1, 0, 0, 1,  0, 1,
+  -1, -1, -1, 1, 0, 0, 0, 1,  1, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
+  1, 1, -1, 1,   1, 1, 0, 1,  0, 0,
+  1, -1, -1, 1,  1, 0, 0, 1,  0, 1,
+  -1, 1, -1, 1,  0, 1, 0, 1,  1, 0,
+]);
+
+
+const basicVertWGSL = `
+struct Uniforms {
+  modelViewProjectionMatrix : mat4x4<f32>,
+}
+@binding(0) @group(0) var<uniform> uniforms : Uniforms;
+
+struct VertexOutput {
+  @builtin(position) Position : vec4<f32>,
+  @location(0) fragUV : vec2<f32>,
+  @location(1) fragPosition: vec4<f32>,
+}
+
+@vertex
+fn main(
+  @location(0) position : vec4<f32>,
+  @location(1) uv : vec2<f32>
+) -> VertexOutput {
+  var output : VertexOutput;
+  output.Position = uniforms.modelViewProjectionMatrix * position;
+  output.fragUV = uv;
+  output.fragPosition = 0.5 * (position + vec4(1.0, 1.0, 1.0, 1.0));
+  return output;
+}
+`;
+
+const sampleTextureMixColorWGSL = `
+@group(0) @binding(1) var mySampler: sampler;
+@group(0) @binding(2) var myTexture: texture_2d<f32>;
+
+@fragment
+fn main(
+  @location(0) fragUV: vec2<f32>,
+  @location(1) fragPosition: vec4<f32>
+) -> @location(0) vec4<f32> {
+  return textureSample(myTexture, mySampler, fragUV) * fragPosition;
+}
+`;
+
+const init = async ({ canvas }) => {
+  const adapter = await navigator.gpu.requestAdapter();
+  const device = await adapter.requestDevice();
+
+  const context = canvas.getContext('webgpu');
+
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * devicePixelRatio;
+  canvas.height = canvas.clientHeight * devicePixelRatio;
+  const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+
+  context.configure({
+    device,
+    format: presentationFormat,
+    alphaMode: 'premultiplied',
+  });
+
+  // Create a vertex buffer from the cube data.
+  const verticesBuffer = device.createBuffer({
+    size: cubeVertexArray.byteLength,
+    usage: GPUBufferUsage.VERTEX,
+    mappedAtCreation: true,
+  });
+  new Float32Array(verticesBuffer.getMappedRange()).set(cubeVertexArray);
+  verticesBuffer.unmap();
+
+  const pipeline = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: {
+      module: device.createShaderModule({
+        code: basicVertWGSL,
+      }),
+      entryPoint: 'main',
+      buffers: [
+        {
+          arrayStride: cubeVertexSize,
+          attributes: [
+            {
+              // position
+              shaderLocation: 0,
+              offset: cubePositionOffset,
+              format: 'float32x4',
+            },
+            {
+              // uv
+              shaderLocation: 1,
+              offset: cubeUVOffset,
+              format: 'float32x2',
+            },
+          ],
+        },
+      ],
+    },
+    fragment: {
+      module: device.createShaderModule({
+        code: sampleTextureMixColorWGSL,
+      }),
+      entryPoint: 'main',
+      targets: [
+        {
+          format: presentationFormat,
+        },
+      ],
+    },
+    primitive: {
+      topology: 'triangle-list',
+
+      // Backface culling since the cube is solid piece of geometry.
+      // Faces pointing away from the camera will be occluded by faces
+      // pointing toward the camera.
+      cullMode: 'back',
+    },
+
+    // Enable depth testing so that the fragment closest to the camera
+    // is rendered in front.
+    depthStencil: {
+      depthWriteEnabled: true,
+      depthCompare: 'less',
+      format: 'depth24plus',
+    },
+  });
+
+  const depthTexture = device.createTexture({
+    size: [canvas.width, canvas.height],
+    format: 'depth24plus',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+
+  const uniformBufferSize = 4 * 16; // 4x4 matrix
+  const uniformBuffer = device.createBuffer({
+    size: uniformBufferSize,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  // // Fetch the image and upload it into a GPUTexture.
+  // const response = await fetch(
+  //   new URL('./Di-3d.png', import.meta.url).toString()
+  // );
+  // const imageBitmap = await createImageBitmap(await response.blob());
+
+
+  const tc = document.getElementById("d");
+  const ctx = tc.getContext("2d");
+
+  ctx.font = "bold 48px Arial";
+  ctx.fillStyle = "red";
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = "blue";
+  ctx.textAlign = "center";
+  ctx.fillText("Hello", 128, 128);
+
+  const texture = ctx.beginWebGPUAccess({device});
+
+  // Create a sampler with linear filtering for smooth interpolation.
+  const sampler = device.createSampler({
+    magFilter: 'linear',
+    minFilter: 'linear',
+  });
+
+  const uniformBindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: uniformBuffer,
+        },
+      },
+      {
+        binding: 1,
+        resource: sampler,
+      },
+      {
+        binding: 2,
+        resource: texture.createView(),
+      },
+    ],
+  });
+
+  const renderPassDescriptor = {
+    colorAttachments: [
+      {
+        view: undefined, // Assigned later
+
+        clearValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+    depthStencilAttachment: {
+      view: depthTexture.createView(),
+
+      depthClearValue: 1.0,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    },
+  };
+
+  const aspect = canvas.width / canvas.height;
+  const projectionMatrix = mat4.perspective(
+    (2 * Math.PI) / 5,
+    aspect,
+    1,
+    100.0
+  );
+  const modelViewProjectionMatrix = mat4.create();
+
+  function getTransformationMatrix() {
+    const viewMatrix = mat4.identity();
+    mat4.translate(viewMatrix, vec3.fromValues(0, 0, -4), viewMatrix);
+    const now = Date.now() / 1000;
+    mat4.rotate(
+      viewMatrix,
+      vec3.fromValues(Math.sin(now), Math.cos(now), 0),
+      1,
+      viewMatrix
+    );
+
+    mat4.multiply(projectionMatrix, viewMatrix, modelViewProjectionMatrix);
+
+    return modelViewProjectionMatrix;
+  }
+
+  function frame() {
+    const transformationMatrix = getTransformationMatrix();
+    device.queue.writeBuffer(
+      uniformBuffer,
+      0,
+      transformationMatrix.buffer,
+      transformationMatrix.byteOffset,
+      transformationMatrix.byteLength
+    );
+    renderPassDescriptor.colorAttachments[0].view = context
+      .getCurrentTexture()
+      .createView();
+
+    const commandEncoder = device.createCommandEncoder();
+    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(pipeline);
+    passEncoder.setBindGroup(0, uniformBindGroup);
+    passEncoder.setVertexBuffer(0, verticesBuffer);
+    passEncoder.draw(cubeVertexCount);
+    passEncoder.end();
+    device.queue.submit([commandEncoder.finish()]);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+};
+
+const canvas = document.getElementById("c");
+
+init({canvas});
+
+
+</script>
+</body>
+</html>
