@@ -16,22 +16,26 @@ Proposal
 
 ```webidl
 interface mixin Canvas2DWebGPU {
-  GPUTexture moveToWebGPU();
-  undefined moveFromWebGPU(GPUTexture texture);
+  GPUTextureFormat getTextureFormat();
+  GPUTexture beginWebGPUAccess({
+    GPUDevice device,
+    string label,
+    });
+  undefined endWebGPUAccess();
 };
 
 CanvasRenderingContext2D includes Canvas2DWebGPU;
 OffscreenCanvasRenderingContext2D includes Canvas2DWebGPU;
 ```
 
-`moveToWebGPU()` returns a [GPUTexture](https://gpuweb.github.io/gpuweb/#gputexture) that can be used in a WebGPU pipeline. After the function is called, the Canvas2D context is unavailable, with all function calls throwing an InvalidStateError when called.
+`beginWebGPUAccess()` returns a [GPUTexture](https://gpuweb.github.io/gpuweb/#gputexture) that can be used in a WebGPU pipeline. After the function is called, the Canvas2D context is unavailable, with all function calls throwing an InvalidStateError when called.
 
-`moveFromWebGPU()` receives a WebGPU Texture (that has previoulsy been created via `moveToWebGPU()`), makes it unavailable to use on WebGPU, and restores the Canvas2D context.
+`endWebGPUAccess()` makes the GPUTexture unavailable to use on WebGPU, and restores the Canvas2D context.
+
+The `GPUTExture` returned has the `GPUTextureUsage` set to `TEXTURE_BINDING | RENDER_ATTACHMENT`.
 
 
 ### Open issues and questions
-
-- What about the GPUTexture texture format? Can we guarantee something?
 
 Example usage
 -------------
@@ -83,7 +87,9 @@ ctx.fillRect(0, 0, 1, 1);
 const canvasTexture = ctx.moveToWebGPU();
 
 const device = await (await navigator.gpu.requestAdapter()).requestDevice();
-const pipeline = device.createRenderPipeline(...);
+const pipeline = device.createRenderPipeline({fragment: {targets: [{
+  format: ctx.getTextureFormat(),
+}]}});
 
 const commandEncoder = device.createCommandEncoder();
 

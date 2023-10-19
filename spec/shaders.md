@@ -17,17 +17,17 @@ Proposal
 ```webidl
 
 interface mixin CanvasShaderCreation {
-  CanvasShader createCanvasShader(string wgslShader);
+  CanvasShader createCanvasShader({
+    string WGSLCode,
+    GPUBlendState? blendState,
+    GPUSamplerDescriptor? sampler,
+    });
 };
 
 CanvasRenderingContext2D includes CanvasShaderCreation;
 OffscreenCanvasRenderingContext2D includes CanvasShaderCreation;
 
 [Exposed=(Window,Worker)] interface CanvasShader {
-  undefined setUniforms(any uniforms);
-  undefined setBlendState(GPUBlendState blendState);
-  undefined setLayerSampler(GPUSampler sampler);
-  undefined uploadTexture(string name, CanvasImageSource image, GPUSampler sampler);
 }
 
 typedef record<DOMString, CanvasShader, any> CanvasFilterPrimitive;
@@ -39,7 +39,7 @@ with some limitations. Namely:
 - there's only one binding group (0) that is the default. Uniforms, textures and samplers are definied and used in this binding group.
 - there's only one entry point.
 - there's always a texture available for sampling with the layer content.
-
+- extra textures and samplers can be passed as uniforms on filter usage.
 
 ### Open issues and questions
 
@@ -53,16 +53,15 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
 const gpufilter = ctx.createCanvasShader(`
-  var<uniform> width : f32;
+  var<uniform> width : f32 = 100;
 
-  fn Filter(texcoord: vec2<f32>) -> vec4<f32> {
+  @filter
+  fn MyFilter(texcoord: vec2<f32>) -> vec4<f32> {
     return vec4(1.0, 0, 0, 1.0);
   }
 `);
 
-filter.setUniforms({width: 100});
-
-ctx.beginLayer({filter: gpufilter});
+ctx.beginLayer({filter: gpufilter, width: 100});
 ctx.fillRect(10, 10, 100, 100);
 ctx.endLayer();
 
