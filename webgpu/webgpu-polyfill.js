@@ -1,10 +1,9 @@
-for (const ctx of [CanvasRenderingContext2D, OffscreenCanvasRenderingContext2D]) {
-
-  ctx.prototype.getTextureFormat = function() {
+class WebGPUInteropPolyfill {
+  getTextureFormat() {
     return 'rgba8unorm';
   }
 
-  ctx.prototype.beginWebGPUAccess = function(opts) {
+  beginWebGPUAccess(opts) {
     this._device = opts.device;
     this._outTexture = this._device.createTexture({
       size: [this.canvas.width, this.canvas.height],
@@ -21,7 +20,7 @@ for (const ctx of [CanvasRenderingContext2D, OffscreenCanvasRenderingContext2D])
     return this._outTexture;
   }
 
-  ctx.prototype.endWebGPUAccess = function() {
+  endWebGPUAccess() {
     const canvas = new OffscreenCanvas(this.canvas.width, this.canvas.height);
     const ctx = canvas.getContext("webgpu");
     ctx.configure({
@@ -73,5 +72,12 @@ for (const ctx of [CanvasRenderingContext2D, OffscreenCanvasRenderingContext2D])
     this.clearRect(0, 0, canvas.width, canvas.height);
     this.drawImage(canvas, 0, 0, canvas.width, canvas.height);
   }
+}
 
+
+for (const ctx of [CanvasRenderingContext2D, OffscreenCanvasRenderingContext2D]) {
+  for (const f of Object.getOwnPropertyNames(WebGPUInteropPolyfill.prototype)) {
+    if (f === 'constructor' || ctx.prototype.hasOwnProperty(f)) continue;
+    ctx.prototype[f] = WebGPUInteropPolyfill.prototype[f];
+  }
 }
