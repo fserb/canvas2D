@@ -38,9 +38,13 @@ Polyfill for the current proposal [here](../webgpu/webgpu-polyfill.js).
 
 ### Open issues and questions
 
+
 Example usage
 -------------
 
+[Using Canvas2D as WebGPU texture with no copy](../webgpu/interop-demo.html)
+
+[Using Canvas2D and WebGPU together with no copy](../webgpu/interop-demo-2.html)
 
 Example for using 2D text on WebGPU:
 
