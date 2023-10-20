@@ -17,10 +17,12 @@ Proposal
 ```webidl
 
 interface mixin CanvasShaderCreation {
-  CanvasShader createCanvasShader({
+  CanvasShader? createCanvasShader({
     string WGSLCode,
     GPUBlendState? blendState,
     GPUSamplerDescriptor? sampler,
+    sequence<GPUFeatureName>? features,
+    record<DOMString, GPUSize64>? limits = {};
     });
 };
 

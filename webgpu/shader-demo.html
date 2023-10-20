@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+<p>Canvas Shaders</p>
+
+<canvas id=c width=512 height=512></canvas>
+
+<script type="module">
+import {CanvasShaderContext} from "./shader-polyfill.js";
+
+const ctx = CanvasShaderContext(document.getElementById("c").getContext("2d"));
+
+ctx.fillStyle = "red";
+ctx.fillRect(0, 0, 512, 512);
+
+
+const shader = await ctx.createCanvasShader({
+  code: `
+@group(0) @binding(0) var myTexture: texture_2d<f32>;
+@fragment fn mainfs(@builtin(position) position : vec4f) -> @location(0) vec4f {
+  var v = textureLoad(myTexture, vec2i(position.xy), 0);
+
+  return vec4f(position.y / 512, position.x / 512, 0, 1) * v.a;
+}
+`,
+  blend: {
+    color: { operation: "add", srcFactor: "alpha", dstFactor: "one-minus-alpha" },
+  },
+
+});
+
+ctx.save();
+ctx.beginLayer(shader);
+ctx.fillStyle = "black";
+ctx.font = "bold 100px arial";
+ctx.fillText("Hello", 100, 300);
+ctx.endLayer();
+ctx.restore();
+
+
+</script>
+</body>
+</html>
