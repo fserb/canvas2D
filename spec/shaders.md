@@ -5,9 +5,9 @@ WebGPU Shaders
 As a follow up to [WebGPU Interop](spec/webgpu.md), we want to design a clean way
 to use WebGPU fragment shaders as Canvas2D filters.
 
-In theory, the interop primitives would allow this to be polyfilled, but
-encapsulating the shaders as filter objects, would allow them to be used on layers,
-which have much better ergonomics, as well as potentially better optimization on
+In theory, the interop primitives could allow this to be polyfilled, but
+encapsulating the shaders as filter objects would allow them to be used on layers,
+which have much better ergonomics as well as potentially better optimization on
 some architectures.
 
 
@@ -50,7 +50,7 @@ Example usage
 -------------
 
 ```js
-// Javascript example
+// Use a WebGPU shader to draw a red square.
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
