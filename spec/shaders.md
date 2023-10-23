@@ -2,7 +2,7 @@ WebGPU Shaders
 =======
 **Status**: explainer.
 
-As a follow up to [WebGPU Interop](spec/webgpu.md), we want to design a clean way
+As a follow up to [WebGPU Interop](webgpu.md), we want to design a clean way
 to use WebGPU fragment shaders as Canvas2D filters.
 
 In theory, the interop primitives could allow this to be polyfilled, but
