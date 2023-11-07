@@ -201,9 +201,10 @@ Raises an exception:
  - `HTMLCanvasElement.toBlob(...)`
  - `HTMLCanvasElement.toDataURL(...)`
  - `OffscreenCanvas.transferToImageBitmap()`
+ - `CanvasRenderingContext2D.createPattern(canvas, ...)`  (reading pixels from `canvas`).
 
 Returns failed promise:
- - `createImageBitmap(canvas)`
+ - `createImageBitmap(canvas)`  (reading pixels from `canvas`).
  - `OffscreenCanvas.convertToBlob(...)`
 
 The canvas bitmap is also read on render opportunities, when the script ends for instance, or if it pauses on an `await` statement. Because there is no way to raise an exception in these cases, we have no other choice but present the content of the canvas regardless of unclosed layers. This already works with the `save()`/`restore()` API: the canvas can be presented even if there are pending saves and implementations have to maintain the canvas state stack alive across JavaScript task executions. To be consistent with this, pending layers must also be kept alive across tasks.
