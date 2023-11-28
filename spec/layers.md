@@ -21,11 +21,12 @@ This proposal adds a simple and efficient API for creating layers to be drawn as
 
 ```webidl
 typedef record<DOMString, any> CanvasFilterPrimitive;
-typedef (CanvasFilterPrimitive or
+typedef (DOMString or
+         CanvasFilterPrimitive or
          sequence<CanvasFilterPrimitive>) CanvasFilterInput;
 
 dictionary BeginLayerOptions {
-  CanvasFilterInput? filter = null;
+  CanvasFilterInput? filter;
 };
 
 interface mixin CanvasLayers {
@@ -38,7 +39,7 @@ Layers are created by calling `beginLayer()` on the context and terminated by ca
 
 Layers behave as if all the draw calls they contain are rendered on a separate texture. That texture is then rendered in the canvas (or the parent layer) with the drawing state of the context as it was when `beginLayer()` was called (e.g. globalAlpha, globalCompositeOperation, shadow, etc. are applied on the filter's result). Image smoothing only applies to individual draw calls, not on layer result textures ([more on this below](#current-transformation-matrix-clip-and-image-smoothing)).
 
-Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters are specified as a CanvasFilterInput object ([originally proposed here](https://github.com/whatwg/html/issues/5621)), essentially describing SVG filters with a JavaScript syntax. [See below](#possible-api-improvements) for possible future improvements, [and here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.52ab2yqq661g) for a full analysis of alternatives considered.
+Optionally, `beginLayer()` can be called with a filter as argument, in which case the layer's resulting texture will be rendered in the canvas using that filter. Filters are specified as a CSS filter string or as CanvasFilterInput objects ([originally proposed here](https://github.com/whatwg/html/issues/5621)) which describes SVG filters with a JavaScript syntax. [See below](#possible-api-improvements) for possible future improvements, [and here](https://docs.google.com/document/d/1jeLn8TbCYVuFA9soUGTJnRjFqLkqDmhJElmdW3w_O4Q/edit#heading=h.52ab2yqq661g) for a full analysis of alternatives considered.
 
 `beginLayer()` and `endLayer()` save and restore the full current state of the context, similarly to `save()` and `restore()`. `beginLayer()`/`endLayer()` and `save()`/`restore()` must therefore operate on the same stack, which must keep track of both the layers and rendering state nesting.
 
@@ -59,7 +60,7 @@ const ctx = canvas.getContext('2d');
 
 ctx.globalAlpha = 0.5; 
 
-ctx.beginLayer({filter: {name: 'gaussianBlur', stdDeviation: 4}});
+ctx.beginLayer({filter: 'blur(4px)'});
 
 ctx.fillStyle = 'rgba(225, 0, 0, 1)';
 ctx.fillRect(50, 50, 75, 50);
@@ -87,6 +88,11 @@ ctx.filter = 'blur(4px)';
 ctx.drawImage(canvas2, 0, 0);
 ```
 
+Filters can be specified as a `CanvasFilterPrimitive` object:
+```js
+ctx.beginLayer({filter: {name: 'gaussianBlur', stdDeviation: 4}});
+```
+
 Filters can also be specified as a list, to chain filter effects:
 ```js
 ctx.beginLayer({filter: [
@@ -100,7 +106,8 @@ In addition to supporting a `CanvasFilterInput` argument, we could also support 
 
 ```webidl
 typedef record<DOMString, any> CanvasFilterPrimitive;
-typedef (CanvasFilterPrimitive or
+typedef (DOMString or
+         CanvasFilterPrimitive or
          sequence<CanvasFilterPrimitive>) CanvasFilterInput;
 
 [
