@@ -7,7 +7,100 @@ precisely after each grapheme cluster (this solves the Google.com example
 above). Note that I use grapheme instead of grapheme cluster in the code
 for simplicity.
 
-## Proposal
+## Proposal #1
+### Background
+The cursor placement issue is already solved in the browser: when users search
+for a specific phrase on the web, the browser needs to know how to place the
+range, where to place the beginning and the ending caret so that the result is
+highlighted properly. To archive that, browsers support functions such as
+[caretPositionFromPoint (x, y)](https://drafts.csswg.org/cssom-view/#dom-document-caretpositionfrompoint)
+to place the caret, and which returns a
+[CaretPosition](https://drafts.csswg.org/cssom-view/#caretposition) object
+containing information like
+[getClientRect()](https://drafts.csswg.org/cssom-view/#dom-caretposition-getclientrect)
+for the exact caret position. For selections, browsers support functions like
+[window.getSelection()](https://developer.mozilla.org/en-US/docs/Web/API/Window/getSelection),
+then users can call functions like selection.getRangeAt(0) to get the range;
+with this information, users can then get the start and the end caret location.
+
+This new API should take advantage of these existing functions to place the
+cursors properly.
+
+### Implementation Details
+Examples of precise cursor placement, text selection, horizontal and vertical
+cursor moves:
+``` javascript
+// When users click on (x,y) and it's within the text boundry
+gfx::rect getCurposition(int x, int y) {
+  CaretPosition position = caretPositionFromPoint(x, y);
+  return getClientRect();
+}
+
+// When users selected some text, getting the start and the ending caret position:
+const selection = window.getSelection();
+const range = selection.getRangeAt(0);
+// start caret:
+range.collapse(true); // Collapse to start
+const startRect = range.getClientRects()[0];
+// end caret:
+range.collapse(false); // Collapse to end
+const endRect = range.getClientRects()[0];
+
+// Horizontal moves:
+// user clicked on (x, y) and moves to the right
+index = caretPositionFromPoint(x, y).offset;
+function getPreviousGrapheme(text, index) {
+    // Create a segmenter for grapheme clustering. It could be a combination of different languages, so I choose language = 'undefined'
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+    const segments = segmenter.segment(text);
+
+    let currentLength = 0;
+    let lastSegmentLength = 0;
+
+    for (const segment of segments) {
+        if (currentLength + segment.segment.length >= codePointIndex) {
+            break;
+        }
+        currentLength += segment.segment.length;
+        lastSegmentLength = segment.segment.length;
+    }
+
+    return lastSegmentLength;
+}
+// Then create new caret to the previous grapheme:
+const newCodePointIndex = codePointIndex - lastSegmentLength;
+
+// Set the new caret position
+const range = document.createRange();
+range.setStart(element, newCodePointIndex);
+range.collapse(true);
+
+const selection = window.getSelection();
+selection.removeAllRanges();
+selection.addRange(range);
+
+// Vertical Moves:
+function moveCaretUpDown(direction) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const rects = range.getClientRects();
+    if (rects.length === 0) return;
+
+    const lineHeight = parseInt(getComputedStyle(range.startContainer.parentElement).lineHeight);
+    const currentRect = rects[0];
+    const newX = currentRect.left;
+    const newY = direction === 'up' ? currentRect.top - lineHeight : currentRect.bottom + lineHeight;
+
+    const newCaretPos = document.caretPositionFromPoint(newX, newY);
+    return newCaretPos;
+}
+
+// Then we can use the same technique to draw the new cursor.
+```
+
+## Alternative considered
 ``` javascript
 //Properties for text element: (for text in the same span)
 start_location; // (x, y)
