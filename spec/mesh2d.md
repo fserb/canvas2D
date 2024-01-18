@@ -54,47 +54,51 @@ At a high level, drawing a triangle mesh requires
 ```webidl
 // Describes the mesh geometry (vertex positions), and can be constructed
 // from a float32 typed array (two floats per vertex).
-[ Exposed=(Window,Worker,PaintWorklet) ]
-interface Mesh2DVertexBuffer {
-    [CallWith=ScriptState, RaisesException] constructor(Float32Array buffer);
-};
+[ Exposed=(Window,Worker,PaintWorklet) ] interface Mesh2DVertexBuffer {};
 
 // Describes the mapping of vertices to UV coordinates.  Similar format and
-// constructor to Mesh2DVertexBuffer.
-typedef Mesh2DVertexBuffer Mesh2DUVBuffer;
+// factory to Mesh2DVertexBuffer.
+[ Exposed=(Window,Worker,PaintWorklet) ] interface Mesh2DUVBuffer {};
+
+// Describes the mapping of vertices to colors (one RGBA color per vertex).
+// Can be constructed from a uint8 typed array (four uints per color).
+[ Exposed=(Window,Worker,PaintWorklet) ] interface Mesh2DColorBuffer {};
 
 // Describes the mesh topology (triangle grouping), as an array of vertex indices,
-// three indices per triangle.  Can be constructed from an uint16 or uint32 typed
-// array. (n.b. these are vertex indices, not float32 indices, in the vertex array)
-[ Exposed=(Window,Worker,PaintWorklet) ]
-interface Mesh2DIndexBuffer {
-    [CallWith=ScriptState, RaisesException] constructor(Uint16Array buffer);
-    [CallWith=ScriptState, RaisesException] constructor(Uint32Array buffer);
-};
-```
+// three indices per triangle.  Can be constructed from an uint16 type array.
+// (n.b. these are vertex indices, not float32 indices, in the vertex array)
+[ Exposed=(Window,Worker,PaintWorklet) ] interface Mesh2DIndexBuffer {};
 
-```webidl
 typedef (CanvasImageSource or
          CanvasGradient or
          CanvasPattern) MeshTextureSource;
 
 interface CanvasRenderingContext2D {
+    // Mesh buffer factories.
+    [RaisesException] Mesh2DVertexBuffer createMesh2DVertexBuffer(Float32Array buffer);
+    [RaisesException] Mesh2DUVBuffer createMesh2DUVBuffer(Float32Array buffer);
+    [RaisesException] Mesh2DColorBuffer createMesh2DColorBuffer(Uint8ClampedArray buffer);
+    [RaisesException] Mesh2DIndexBuffer createMesh2DIndexBuffer(Uint16Array buffer);
+
     // Triangle mesh using a texture source and UV mapping.
     [HighEntropy, RaisesException] void drawMesh(Mesh2DVertexBuffer vertex_buffer,
-                                                 Mesh2DIndexBuffer  index_buffer,
-                                                 Mesh2DUVBuffer     uv_buffer,
-                                                 MeshTextureSource  texture_source);
+                                                 Mesh2DUVBuffer uv_buffer,
+                                                 Mesh2DIndexBuffer index_buffer,
+                                                 MeshTextureSource texture_source);
 
     // Triangle mesh using explicit vertex colors.
     [HighEntropy, RaisesException] void drawMesh(Mesh2DVertexBuffer vertex_buffer,
-                                                 Mesh2DIndexBuffer  index_buffer,
-                                                 Mesh2DColorBuffer  color_buffer);
+                                                 Mesh2DColorBuffer color_buffer,
+                                                 Mesh2DIndexBuffer index_buffer,
+                                                 MeshTextureSource texture_source);
 };
 ```
 
 ## Example usage
 ### Allocating mesh buffers
 ```js
+const ctx = document.getElementById("canvas").getContext("2d");
+
 // A trivial 4-vertex, 2-triangle mesh:
 // 0    1
 //  *--*
@@ -104,21 +108,21 @@ interface CanvasRenderingContext2D {
 // 3    2
 
 // Vertex position buffer: Float32Array, two float32s per vertex.
-const vbuf = new Mesh2DVertexBuffer(new Float32Array([
+const vbuf = ctx.createMesh2DVertexBuffer(new Float32Array([
     0,   0,
    50,   0,
    50, 100,
     0, 100
 ]));
 
-// Index buffer: Uint16Array, 3 uints per triangle.
-const ibuf = new Mesh2DIndexBuffer(new Uint16Array([
+// Index buffer: Uint16Array, three uints per triangle.
+const ibuf = ctx.createMesh2DIndexBuffer(new Uint16Array([
   0, 2, 1,
   0, 2, 3
 ]));
 
 // Color buffer: four uint8s per vertex, RGBA format.
-const cbuf = new Mesh2DColorBuffer(new Uint8ClampedArray([
+const cbuf = ctx.createMesh2DColorBuffer(new Uint8ClampedArray([
   255,   0,   0, 255,
     0, 255,   0, 255,
     0,   0, 255, 255,
@@ -126,7 +130,7 @@ const cbuf = new Mesh2DColorBuffer(new Uint8ClampedArray([
 ]));
 
 // UV buffer: Float32Array, two float32s per vertex.
-const uvbuf = new Mesh2DUVBuffer(new Float32Array([
+const uvbuf = ctx.createMesh2DUVBuffer(new Float32Array([
   0, 0,
   1, 0,
   1, 1,
@@ -140,12 +144,12 @@ const uvbuf = new Mesh2DUVBuffer(new Float32Array([
 const ctx = document.getElementById("canvas").getContext("2d");
 
 // A color mesh, which does not require a texture.
-ctx.drawMesh(vbuf, ibuf, cbuf);
+ctx.drawMesh(vbuf, cbuf, ibuf);
 
 // A textured mesh, using ImageBitmap, HTMLImageElement,
 // SVGImageElement, OffscreenCanvas, HTMLCanvasElement, VideoFrame,
 // HTMLVideoElement or CanvasPattern texture sources.
-ctx.drawMesh(vbuf, ibuf, uvbuf, texture_source);
+ctx.drawMesh(vbuf, uvbuf, ibuf, texture_source);
 ```
 
 ## Rendering model
