@@ -89,8 +89,7 @@ interface CanvasRenderingContext2D {
     // Triangle mesh using explicit vertex colors.
     [HighEntropy, RaisesException] void drawMesh(Mesh2DVertexBuffer vertex_buffer,
                                                  Mesh2DColorBuffer color_buffer,
-                                                 Mesh2DIndexBuffer index_buffer,
-                                                 MeshTextureSource texture_source);
+                                                 Mesh2DIndexBuffer index_buffer);
 };
 ```
 
