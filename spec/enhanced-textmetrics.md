@@ -50,7 +50,7 @@ for (const s of selectionForThirdWord) {
     ctx.fillRect(s.x, s.y, s.width, s.height);
 }
 ctx.fillStyle = "black";
-ctx.fillText("let's do this", 0, 0);
+ctx.fillText("let's do this");
 ```
 
 `getSelectionRects()` can be used on Chrome Canary (starting from version `127.0.6483.0`) by using enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`).
