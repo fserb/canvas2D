@@ -3,9 +3,9 @@ class WebGPUInteropPolyfill {
     return 'rgba8unorm';
   }
 
-  beginWebGPUAccess(opts) {
+  transferToWebGPU(opts) {
     this._device = opts.device;
-    this._outTexture = this._device.createTexture({
+    const tex = this._device.createTexture({
       size: [this.canvas.width, this.canvas.height],
       format: 'rgba8unorm',
       usage:
@@ -15,17 +15,17 @@ class WebGPUInteropPolyfill {
       });
     this._device.queue.copyExternalImageToTexture(
       { source: this.canvas },
-      { texture: this._outTexture },
+      { texture: tex },
       [this.canvas.width, this.canvas.height]);
-    return this._outTexture;
+    return tex;
   }
 
-  endWebGPUAccess() {
+  transferFromWebGPU(tex) {
     const canvas = new OffscreenCanvas(this.canvas.width, this.canvas.height);
     const ctx = canvas.getContext("webgpu");
     ctx.configure({
       device: this._device,
-      format: this._outTexture.format,
+      format: tex.format,
     });
     const mod = this._device.createShaderModule({ code: `
 @vertex fn mainvs(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4f {
@@ -43,12 +43,12 @@ class WebGPUInteropPolyfill {
       layout: 'auto',
       vertex: {module: mod, entryPoint: 'mainvs'},
       fragment: {module: mod, entryPoint: 'mainfs',
-        targets: [{ format: this._outTexture.format }]},
+        targets: [{ format: tex.format }]},
     });
 
     const bindGroup = this._device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
-      entries: [{ binding: 0, resource: this._outTexture.createView() }],
+      entries: [{ binding: 0, resource: tex.createView() }],
     });
 
     const encoder = this._device.createCommandEncoder();
@@ -66,8 +66,7 @@ class WebGPUInteropPolyfill {
     pass.end();
     this._device.queue.submit([encoder.finish()]);
 
-    this._outTexture.destroy();
-    delete this._outTexture;
+    tex.destroy();
 
     this.clearRect(0, 0, canvas.width, canvas.height);
     this.drawImage(canvas, 0, 0, canvas.width, canvas.height);

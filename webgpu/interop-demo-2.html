@@ -298,7 +298,7 @@ const init = async ({ canvas }) => {
     ctx.textAlign = "center";
     ctx.fillText("Hello", 128, 100);
 
-    const texture = ctx.beginWebGPUAccess({device});
+    const texture = ctx.transferToWebGPU({device});
 
     const transformationMatrix = getTransformationMatrix();
     device.queue.writeBuffer(
@@ -319,7 +319,7 @@ const init = async ({ canvas }) => {
     passEncoder.end();
     device.queue.submit([commandEncoder.finish()]);
 
-    ctx.endWebGPUAccess();
+    ctx.transferFromWebGPU(texture);
 
     ctx.fillStyle = "green";
     ctx.textAlign = "center";

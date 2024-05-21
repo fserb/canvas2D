@@ -1,8 +1,8 @@
-WebGPU Integration
+WebGPU Transfer
 =======
 **Status**: explainer.
 
-This proposal tries to create a better interop between Canvas 2D and WebGPU, addressing both performance and ergonomics problems. It provides a low level primitive to transfer canvas' backbuffer to a WebGPU texture (disabling Canvas2D in the process), and a primitive to bring back that texture to Canvas2D.
+This proposal tries to create better interoperability between Canvas 2D and WebGPU, addressing both performance and ergonomics problems. It provides a low level primitive to transfer a canvas' backbuffer to a WebGPU texture (resetting the canvas to an empty state), and a matching primitive to bring back that texture to Canvas2D.
 
 There are 2 use cases in mind for this proposal:
 
@@ -15,24 +15,36 @@ Proposal
 --------
 
 ```webidl
-interface mixin Canvas2DWebGPU {
-  GPUTextureFormat getTextureFormat();
-  GPUTexture beginWebGPUAccess({
-    GPUDevice device,
-    string label,
-    });
-  undefined endWebGPUAccess();
+dictionary Canvas2dWebGPUTransferOption {
+  // This GPUDevice will be given access to the canvas' texture.
+  GPUDevice device;
+
+  // This label will be assigned to the GPUTexture returned by transferToWebGPU.
+  DOMString? label;
+
+  // This controls the GPUTextureUsage flags of the GPUTexture returned by
+  // transferToWebGPU. The default value will return a canvas texture that is
+  // usable as a render attachment, and bindable as a 2D texture.
+  GPUTextureUsageFlags usage = 0x14;  // TEXTURE_BINDING | RENDER_ATTACHMENT
 };
 
-CanvasRenderingContext2D includes Canvas2DWebGPU;
-OffscreenCanvasRenderingContext2D includes Canvas2DWebGPU;
+[
+    RuntimeEnabled=Canvas2dWebGPUTransfer,
+    Exposed=(Window,Worker),
+    SecureContext
+] interface mixin Canvas2dWebGPUTransfer {
+  [RaisesException] GPUTexture transferToWebGPU(Canvas2dWebGPUTransferOption options);
+  [RaisesException] undefined transferFromWebGPU(GPUTexture tex);
+  GPUTextureFormat getTextureFormat();
+};
+
+CanvasRenderingContext2D includes Canvas2DWebGPUTransfer;
+OffscreenCanvasRenderingContext2D includes Canvas2DWebGPUTransfer;
 ```
 
-`beginWebGPUAccess()` returns a [GPUTexture](https://gpuweb.github.io/gpuweb/#gputexture) that can be used in a WebGPU pipeline. After the function is called, the Canvas2D context is unavailable, with all function calls throwing an InvalidStateError when called.
+`transferToWebGPU()` returns a [GPUTexture](https://gpuweb.github.io/gpuweb/#gputexture) that can be used in a WebGPU pipeline. After the function is called, the Canvas2D image is returned to an empty, newly-initialized state.
 
-`endWebGPUAccess()` makes the GPUTexture unavailable to use on WebGPU, and restores the Canvas2D context.
-
-The `GPUTExture` returned has the `GPUTextureUsage` set to `TEXTURE_BINDING | RENDER_ATTACHMENT`.
+`transferFromWebGPU()` moves the GPUTexture back to the canvas, including any changes that were made to it in the interim. The GPUTexture becomes unavailable for use on WebGPU. Any existing image on the Canvas2D is destroyed.
 
 Polyfill for the current proposal [here](../webgpu/webgpu-polyfill.js).
 
@@ -49,13 +61,13 @@ Example usage
 Example for using 2D text on WebGPU:
 
 ```js
+const device = await (await navigator.gpu.requestAdapter()).requestDevice();
 const canvas = new OffscreenCanvas(256, 256);
 const ctx = canvas.getContext('2d');
 ctx.fillText("some text", 10, 50);
 
-const canvasTexture = ctx.moveToWebGPU();
+const canvasTexture = ctx.transferToWebGPU({device: device});
 
-const device = await (await navigator.gpu.requestAdapter()).requestDevice();
 const pipeline = device.createRenderPipeline(...);
 
 const sampler = device.createSampler({
@@ -83,15 +95,15 @@ device.createBindGroup({
 Example for using WebGPU in Canvas 2D:
 
 ```js
+const device = await (await navigator.gpu.requestAdapter()).requestDevice();
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext('2d');
 
 // ... some Canvas2D work.
 ctx.fillRect(0, 0, 1, 1);
 
-const canvasTexture = ctx.moveToWebGPU();
+const canvasTexture = ctx.transferToWebGPU({device: device});
 
-const device = await (await navigator.gpu.requestAdapter()).requestDevice();
 const pipeline = device.createRenderPipeline({fragment: {targets: [{
   format: ctx.getTextureFormat(),
 }]}});
@@ -113,7 +125,7 @@ renderPassEncoder.draw(3, 1, 0, 0);
 renderPassEncoder.end();
 device.queue.submit([commandEncoder.finish()]);
 
-ctx.moveFromWebGPU(canvasTexture);
+ctx.transferFromWebGPU(canvasTexture);
 
 // ... continue Canvas2D work.
 ctx.fillRect(1, 1, 1, 1);
