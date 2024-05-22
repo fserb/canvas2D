@@ -37,14 +37,14 @@ const ctx = canvas.getContext("2d");
 
 const textMetrics = ctx.measureText("let's do this");
 ctx.fillStyle = "red";
-const boxForSecondWord = textMetrics.getActualBoundingBox(6, 7);
+const boxForSecondWord = textMetrics.getActualBoundingBox(6, 8);
 ctx.fillRect(
     boxForSecondWord.x,
     boxForSecondWord.y,
     boxForSecondWord.width,
     boxForSecondWord.height,
 );
-const selectionForThirdWord = textMetrics.getSelectionRects(9, 12);
+const selectionForThirdWord = textMetrics.getSelectionRects(9, 13);
 ctx.fillStyle = "lightblue";
 for (const s of selectionForThirdWord) {
     ctx.fillRect(s.x, s.y, s.width, s.height);
