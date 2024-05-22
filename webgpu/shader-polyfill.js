@@ -28,7 +28,7 @@ class CanvasShader {
       alphaMode: 'premultiplied',
     });
 
-    const texture = octx.beginWebGPUAccess({device: this.device});
+    const texture = octx.transferToWebGPU({device: this.device});
 
     const pipeline = this.device.createRenderPipeline({
       layout: 'auto',
