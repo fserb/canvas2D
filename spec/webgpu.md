@@ -30,7 +30,17 @@ dictionary Canvas2dGPUTransferOption {
 
 [
     RuntimeEnabled=Canvas2dGPUTransfer,
-    Exposed=(Window,Worker),
+    Exposed=(Window, Worker),
+    SecureContext
+] interface CanvasTransferableGPUTexture : GPUTexture {
+    // This class doesn't directly add any methods or attributes.
+    // This type enforces that only GPUTextures from a Canvas2D are eligible to
+    // be returned to a canvas. They can only be created via `transferToGPUTexture`.
+};
+
+[
+    RuntimeEnabled=Canvas2dGPUTransfer,
+    Exposed=(Window, Worker),
     SecureContext
 ] interface mixin Canvas2dGPUTransfer {
   [RaisesException] CanvasTransferableGPUTexture transferToGPUTexture(Canvas2dGPUTransferOption options);
