@@ -3,29 +3,29 @@ class WebGPUInteropPolyfill {
     return 'rgba8unorm';
   }
 
-  transferToWebGPU(opts) {
+  transferToGPUTexture(opts) {
     this._device = opts.device;
-    const tex = this._device.createTexture({
+    this._outTexture = this._device.createTexture({
       size: [this.canvas.width, this.canvas.height],
       format: 'rgba8unorm',
       usage:
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_DST |
         GPUTextureUsage.RENDER_ATTACHMENT,
-      });
+    });
     this._device.queue.copyExternalImageToTexture(
       { source: this.canvas },
-      { texture: tex },
+      { texture: this._outTexture },
       [this.canvas.width, this.canvas.height]);
-    return tex;
+    return this._outTexture;
   }
 
-  transferFromWebGPU(tex) {
+  transferBackFromGPUTexture() {
     const canvas = new OffscreenCanvas(this.canvas.width, this.canvas.height);
     const ctx = canvas.getContext("webgpu");
     ctx.configure({
       device: this._device,
-      format: tex.format,
+      format: this._outTexture.format,
     });
     const mod = this._device.createShaderModule({ code: `
 @vertex fn mainvs(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4f {
@@ -38,17 +38,16 @@ class WebGPUInteropPolyfill {
   return textureLoad(myTexture, vec2i(position.xy), 0);
 }`
     });
-
     const pipeline = this._device.createRenderPipeline({
       layout: 'auto',
       vertex: {module: mod, entryPoint: 'mainvs'},
       fragment: {module: mod, entryPoint: 'mainfs',
-        targets: [{ format: tex.format }]},
+        targets: [{ format: this._outTexture.format }]},
     });
 
     const bindGroup = this._device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
-      entries: [{ binding: 0, resource: tex.createView() }],
+      entries: [{ binding: 0, resource: this._outTexture.createView() }],
     });
 
     const encoder = this._device.createCommandEncoder();
@@ -66,13 +65,13 @@ class WebGPUInteropPolyfill {
     pass.end();
     this._device.queue.submit([encoder.finish()]);
 
-    tex.destroy();
+    this._outTexture.destroy();
+    delete this._outTexture;
 
     this.clearRect(0, 0, canvas.width, canvas.height);
     this.drawImage(canvas, 0, 0, canvas.width, canvas.height);
   }
 }
-
 
 for (const ctx of [CanvasRenderingContext2D, OffscreenCanvasRenderingContext2D]) {
   for (const f of Object.getOwnPropertyNames(WebGPUInteropPolyfill.prototype)) {
