@@ -4,7 +4,7 @@ WebGPU Transfer
 
 This proposal tries to create better interoperability between Canvas 2D and WebGPU, addressing both performance and ergonomics problems. It provides a low level primitive to transfer a canvas' backbuffer to a WebGPU texture (resetting the canvas to an empty image), and a matching primitive to bring back that texture to Canvas2D.
 
-There are 2 use cases in mind for this proposal:
+There are two use cases in mind for this proposal:
 
 1. Having access to text and path drawing in WebGPU.
 
@@ -32,19 +32,9 @@ dictionary Canvas2dGPUTransferOption {
     RuntimeEnabled=Canvas2dGPUTransfer,
     Exposed=(Window, Worker),
     SecureContext
-] interface CanvasTransferableGPUTexture : GPUTexture {
-    // This class doesn't directly add any methods or attributes.
-    // This type enforces that only GPUTextures from a Canvas2D are eligible to
-    // be returned to a canvas. They can only be created via `transferToGPUTexture`.
-};
-
-[
-    RuntimeEnabled=Canvas2dGPUTransfer,
-    Exposed=(Window, Worker),
-    SecureContext
 ] interface mixin Canvas2dGPUTransfer {
-  [RaisesException] CanvasTransferableGPUTexture transferToGPUTexture(Canvas2dGPUTransferOption options);
-  [RaisesException] undefined transferFromGPUTexture(CanvasTransferableGPUTexture tex);
+  [RaisesException] GPUTexture transferToGPUTexture(Canvas2dGPUTransferOption options);
+  [RaisesException] undefined transferBackFromGPUTexture();
   GPUTextureFormat getTextureFormat();
 };
 
@@ -52,9 +42,15 @@ CanvasRenderingContext2D includes Canvas2DGPUTransfer;
 OffscreenCanvasRenderingContext2D includes Canvas2DGPUTransfer;
 ```
 
-`transferToGPUTexture()` returns a [CanvasTransferableGPUTexture](https://gpuweb.github.io/gpuweb/#gputexture) that can be used in a WebGPU pipeline. After the function is called, the Canvas2D image is returned to an empty, newly-initialized state. The returned texture is subject to [automatic expiry](https://www.w3.org/TR/webgpu/#automatic-expiry-task-source) and may enter a destroyed state if it is not used within the current Javascript task.
+`transferToGPUTexture()` returns a [GPUTexture](https://gpuweb.github.io/gpuweb/#gputexture) that can be used in a WebGPU pipeline. After the function is called, the Canvas2D is returned to an empty, newly-initialized state.
 
-`transferFromGPUTexture()` moves the `CanvasTransferableGPUTexture` back to the canvas, preserving any changes that were made to it in the interim. The GPU texture enters a destroyed state, and is unavailable for further use on WebGPU. Any existing image on the Canvas2D is replaced with the image from the GPU texture.
+`transferBackFromGPUTexture()` moves the `GPUTexture` back to the canvas, preserving any changes that were made to it in the interim. The `GPUTexture` enters a destroyed state, and becomes unavailable for further use in WebGPU.
+
+An exception is raised if `transferBackFromGPUTexture()` is invoked before any calls to `transferToGPUTexture()`.
+
+It is legal to invoke drawing commands on the Canvas2D context after `transferToGPUTexture` is invoked. The `GPUTexture` from the canvas remains in a valid state and can continue to be used. However, `transferBackFromGPUTexture()` is no longer allowed once the canvas has been drawn to; invoking it will raise an exception.
+
+It is legal to invoke `transferToGPUTexture()` more than once without an intervening call to `transferBackFromGPUTexture()`. When this occurs, the previously-created GPUTexture will immediately enter a destroyed state and will no longer be usage. A new texture will be returned which holds the canvas' current contents.
 
 Polyfill for the current proposal [here](../webgpu/webgpu-polyfill.js).
 
@@ -135,7 +131,7 @@ renderPassEncoder.draw(3, 1, 0, 0);
 renderPassEncoder.end();
 device.queue.submit([commandEncoder.finish()]);
 
-ctx.transferFromGPUTexture(canvasTexture);
+ctx.transferBackFromGPUTexture();
 
 // ... continue Canvas2D work.
 ctx.fillRect(1, 1, 1, 1);

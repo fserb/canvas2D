@@ -217,7 +217,7 @@ const init = async ({ canvas }) => {
   ctx.textAlign = "center";
   ctx.fillText("Hello", 128, 128);
 
-  const texture = ctx.transferToWebGPU({device});
+  const texture = ctx.transferToGPUTexture({device});
 
   // Create a sampler with linear filtering for smooth interpolation.
   const sampler = device.createSampler({
