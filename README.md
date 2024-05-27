@@ -12,13 +12,13 @@ In active development
 
 - [**Layers**](spec/layers.md). Support layers in canvas, that will be drawn in one, allowing effects only possible with auxiliary canvases.
 
-- [**Display list object**](spec/display-list-object.md). Format and data structure for retained mode drawings, making Canvas apps faster, more accessible and indexable.
+- [**WebGPU Integration**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU.
+
+- [**Enhanced Text Metrics**](spec/enhanced-textmetrics.md). Extend measureText to support DOM-provided APIs, like selection rect and more.
 
 - [**Mesh2D**](spec/mesh2d.md). Draw a large number of texture-mapped triangles efficiently.
 
-- [**WebGPU Integration**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU.
 
-- [**WebGPU Shaders**](spec/shaders.md). Allow for WebGPU shaders to be used as Canvas2D layers filters.
 
 Launched
 --------
@@ -55,6 +55,10 @@ Parked / Future ideas
 - **Path2D Inspection**. Allow inspection of Path2D objects, that are currently opaque.
 
 - **Element as a source for drawImage**.
+
+- [**Display list object**](spec/display-list-object.md). Format and data structure for retained mode drawings, making Canvas apps faster, more accessible and indexable.
+
+- [**WebGPU Shaders**](spec/shaders.md). Allow for WebGPU shaders to be used as Canvas2D layers filters.
 
 
 

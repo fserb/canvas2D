@@ -20,6 +20,8 @@ All metrics available through DOM APIs should also be available on `measureText(
   
   sequence<DOMRectReadOnly> getSelectionRects(unsigned long start, unsigned long end);
   DOMRectReadOnly getActualBoundingBox(unsigned long start, unsigned long end);
+
+  unsigned long caretPositionFromOffset(double offset);
 };
 ```
 
@@ -61,4 +63,3 @@ Expected output:
 
 ## Alternatives and Open Questions
 
-* Is `CaretPositionFromCursor()` needed? Can’t it be devised from `getSelectionRects()`?
