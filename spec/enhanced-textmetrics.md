@@ -55,7 +55,7 @@ ctx.fillStyle = "black";
 ctx.fillText("let's do this");
 ```
 
-`getSelectionRects()` can be used on Chrome Canary (starting from version `127.0.6483.0`) by using enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`).
+`getSelectionRects()` and `getActualBoundingBox()` can be used on Chrome Canary (starting from version `127.0.6483.0` and `128.0.6573.0` respectively) by enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`). 
 
 Expected output:
 
