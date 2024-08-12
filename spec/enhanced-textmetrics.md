@@ -1,4 +1,4 @@
-# Enhanced TextMetrics for Selection and Bounding Box
+# Enhanced TextMetrics
 
 **Status**: explainer.
 
@@ -8,9 +8,12 @@ Extend the capabilities of `TextMetrics` to support selection rectangles and bou
 
 ## Rationale
 
-Users should be able to interact with canvas-based text input (like Google Docs, VSCode, Miro) that correctly renders selection and caret positions.
+Users should be able to interact with canvas-based text input that correctly renders selection and caret positions.
 
-All metrics available through DOM APIs should also be available on `measureText()`. Furthermore, `measureText()` will always be limited to a single style, and therefore has the potential to be much faster (as it doesn’t need layout). `measureText()` must return the same value as the equivalent DOM APIs.
+All metrics available through DOM APIs should also be available on `measureText()`. Furthermore, `measureText()` will always be limited to a single style, and therefore has the potential to be slightly faster (as it doesn’t need layout). `measureText()` must return the same value as the equivalent DOM APIs.
+
+We also want to provide more power to current canvas text rendering APIs.
+
 
 ## Proposal
 

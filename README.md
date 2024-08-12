@@ -5,14 +5,12 @@ This repo contains new, current and old proposals for the [Canvas 2D API](https:
 
 [Explainer video](https://www.youtube.com/watch?v=dfOKFSDG7IM)
 
-
-
 In active development
 ---------------------
 
 - [**Layers**](spec/layers.md). Support layers in canvas, that will be drawn in one, allowing effects only possible with auxiliary canvases.
 
-- [**WebGPU Integration**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU.
+- [**WebGPU Access**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU/WebGL.
 
 - [**Enhanced Text Metrics**](spec/enhanced-textmetrics.md). Extend measureText to support DOM-provided APIs, like selection rect and more.
 
