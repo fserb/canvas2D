@@ -23,25 +23,41 @@ We also want to provide more power to current canvas text rendering APIs.
   
   sequence<DOMRectReadOnly> getSelectionRects(unsigned long start, unsigned long end);
   DOMRectReadOnly getActualBoundingBox(unsigned long start, unsigned long end);
+  sequence<TextCluster> getTextClustersForRange(unsigned long start, unsigned long end, optional DOMString text_align, optional DOMString text_baseline);
 
   unsigned long caretPositionFromOffset(double offset);
 };
+
+[Exposed=(Window,Worker)]
+interface TextCluster {
+    attribute DOMString text;
+    attribute double x;
+    attribute double y;
+    attribute unsigned long begin;
+    attribute unsigned long end;
+};
 ```
 
-Both functions operate in character ranges and return bounding boxes relative to the text’s origin (i.e., `textBaseline`/`textAlign` is taken into account).
+All functions operate in character ranges and return rectangles and positions relative to the text’s origin (i.e., `textBaseline`/`textAlign` is taken into account).
 
 `getSelectionRects()` returns the set of rectangles that the UA would render as selection to select a particular character range.
 
 `getActualBoundingBox()` returns an equivalent box to `TextMetrics.actualBoundingBox`, i.e., the bounding rectangle for the drawing of that range. Notice that this can be (and usually is) different from the selection rect, as those are about the flow and advance of the text. A font that is particularly slanted or whose accents go beyond the flow of text will have a different paint bounding box. For example: if you select this: ***W*** you will see that the end of the W is outside the selection area, which would be covered by the paint (actual bounding box) area.
 
+`getTextClustersForRange()` provides the ability to render minimal grapheme clusters (in conjunction with a new method for the canvas rendering context, more on that later). That is, for the character range given as in input, it returns the minimal rendering operations broken down as much as logically possible, with their corresponding positional data. The position is calculated with the original anchor point for the text as reference, while the `text_align` and `text_baseline` parameters determine the desired alignment of each cluster.
+
+In practice, this means that when rendering the returned `TextCluster` objects, the canvas context should have its `textAlign` and `textBaseline` values set equal to these parameters in order to reproduce the original measured text exactly. For `text_align` specifically, the position is calculated in regards of the advance of said grapheme cluster in the text. For example: if the `text_align` passed to the function is `center`, for the letter **T** in the string **Test**, the position returned will be not exactly be in the middle of the **T**. This is because the advance is reduced by the kerning between the first two letters, making it less than the width of a **T** rendered on its own.
+
+To guarantee that the shaping of each cluster is indeed the same as it was when measured, it's necessary to use the whole string as context when rendering each cluster. That is why the complete text is referenced in the `TextCluster` objects, since the proposed `fillTextCluster()` API for the Canvas2D context requires it for rendering.
+
 ## Example usage
 
 ```js
-const canvas = document.querySelector("canvas");
+const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext("2d");
 
 const textMetrics = ctx.measureText("let's do this");
-ctx.fillStyle = "red";
+ctx.fillStyle = 'red';
 const boxForSecondWord = textMetrics.getActualBoundingBox(6, 8);
 ctx.fillRect(
     boxForSecondWord.x,
@@ -50,19 +66,43 @@ ctx.fillRect(
     boxForSecondWord.height,
 );
 const selectionForThirdWord = textMetrics.getSelectionRects(9, 13);
-ctx.fillStyle = "lightblue";
+ctx.fillStyle = 'lightblue';
 for (const s of selectionForThirdWord) {
     ctx.fillRect(s.x, s.y, s.width, s.height);
 }
-ctx.fillStyle = "black";
+ctx.fillStyle = 'black';
 ctx.fillText("let's do this");
 ```
-
-`getSelectionRects()` and `getActualBoundingBox()` can be used on Chrome Canary (starting from version `127.0.6483.0` and `128.0.6573.0` respectively) by enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`). 
 
 Expected output:
 
 ![enhanced textMetrics output](../images/enhanced-textmetrics-output.png)
+
+`getSelectionRects()` and `getActualBoundingBox()` can be used on Chrome Canary (starting from version `127.0.6483.0` and `128.0.6573.0` respectively) by enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`). 
+
+```js
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+ctx.font = '60px serif';
+ctx.textAlign = 'left';
+ctx.textBaseline = 'middle';
+
+const text = 'Colors 🎨 are 🏎️ fine!';
+let tm = ctx.measureText(text);
+let clusters = tm.getTextClustersForRange(0, text.length, 'left', 'middle');
+
+for(let cluster of clusters) {
+    let blue = 100 * cluster.x / tm.width;
+    let green = 100 - blue;
+    ctx.fillStyle = `rgb(100%, ${blue}%, ${green}%)`;
+    ctx.fillTextCluster(cluster);
+}
+```
+
+Expected output:
+
+![enhanced textMetrics output](../images/text-clusters-output.png)
 
 ## Alternatives and Open Questions
 
