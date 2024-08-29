@@ -18,14 +18,9 @@ We also want to provide more power to current canvas text rendering APIs.
 ## Proposal
 
 ```webidl
-[Exposed=(Window,Worker)] interface TextMetrics {
-  // ... extended from current TextMetrics.
-  
-  sequence<DOMRectReadOnly> getSelectionRects(unsigned long start, unsigned long end);
-  DOMRectReadOnly getActualBoundingBox(unsigned long start, unsigned long end);
-  sequence<TextCluster> getTextClustersForRange(unsigned long start, unsigned long end, optional DOMString text_align, optional DOMString text_baseline);
-
-  unsigned long caretPositionFromOffset(double offset);
+dictionary TextAnchorPoint {
+  DOMString align;
+  DOMString baseline;
 };
 
 [Exposed=(Window,Worker)]
@@ -35,6 +30,22 @@ interface TextCluster {
     attribute double y;
     attribute unsigned long begin;
     attribute unsigned long end;
+};
+
+[Exposed=(Window,Worker)] interface TextMetrics {
+  // ... extended from current TextMetrics.
+  
+  sequence<DOMRectReadOnly> getSelectionRects(unsigned long start, unsigned long end);
+  DOMRectReadOnly getActualBoundingBox(unsigned long start, unsigned long end);
+  sequence<TextCluster> getTextClustersForRange(unsigned long start, unsigned long end, optional DOMString text_align, optional TextAnchorPoint anchor_point);
+
+  unsigned long caretPositionFromOffset(double offset);
+};
+
+interface CanvasRenderingContext2D {
+    // ... extended from current CanvasRenderingContext2D.
+
+    void fillTextCluster(TextCluster textCluster);
 };
 ```
 
@@ -90,7 +101,9 @@ ctx.textBaseline = 'middle';
 
 const text = 'Colors 🎨 are 🏎️ fine!';
 let tm = ctx.measureText(text);
-let clusters = tm.getTextClustersForRange(0, text.length, 'left', 'middle');
+let clusters = tm.getTextClustersForRange(0, text.length,
+                                         {align: 'left', 
+                                          baseline: 'middle'});
 
 for(let cluster of clusters) {
     let blue = 100 * cluster.x / tm.width;
