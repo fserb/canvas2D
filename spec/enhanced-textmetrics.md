@@ -30,6 +30,8 @@ interface TextCluster {
     attribute double y;
     attribute unsigned long begin;
     attribute unsigned long end;
+    attribute DOMString align;
+    attribute DOMString baseline;
 };
 
 [Exposed=(Window,Worker)] interface TextMetrics {
@@ -45,7 +47,7 @@ interface TextCluster {
 interface CanvasRenderingContext2D {
     // ... extended from current CanvasRenderingContext2D.
 
-    void fillTextCluster(TextCluster textCluster);
+    void fillTextCluster(TextCluster textCluster, optional double x, optional double y);
 };
 ```
 
@@ -109,7 +111,7 @@ for(let cluster of clusters) {
     let blue = 100 * cluster.x / tm.width;
     let green = 100 - blue;
     ctx.fillStyle = `rgb(100%, ${blue}%, ${green}%)`;
-    ctx.fillTextCluster(cluster);
+    ctx.fillTextCluster(cluster, 0, 0);
 }
 ```
 
