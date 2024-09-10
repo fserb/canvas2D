@@ -39,7 +39,7 @@ interface TextCluster {
   
   sequence<DOMRectReadOnly> getSelectionRects(unsigned long start, unsigned long end);
   DOMRectReadOnly getActualBoundingBox(unsigned long start, unsigned long end);
-  sequence<TextCluster> getTextClustersForRange(unsigned long start, unsigned long end, optional DOMString text_align, optional TextAnchorPoint anchor_point);
+  sequence<TextCluster> getTextClustersForRange(unsigned long start, unsigned long end, optional TextAnchorPoint anchor_point);
 
   unsigned long caretPositionFromOffset(double offset);
 };
