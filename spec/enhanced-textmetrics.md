@@ -39,7 +39,7 @@ interface TextCluster {
   
   sequence<DOMRectReadOnly> getSelectionRects(unsigned long start, unsigned long end);
   DOMRectReadOnly getActualBoundingBox(unsigned long start, unsigned long end);
-  sequence<TextCluster> getTextClustersForRange(unsigned long start, unsigned long end, optional TextAnchorPoint anchor_point);
+  sequence<TextCluster> getTextClusters(unsigned long start, unsigned long end, optional TextAnchorPoint anchor_point);
 
   unsigned long caretPositionFromOffset(double offset);
 };
@@ -57,9 +57,11 @@ All functions operate in character ranges and return rectangles and positions re
 
 `getActualBoundingBox()` returns an equivalent box to `TextMetrics.actualBoundingBox`, i.e., the bounding rectangle for the drawing of that range. Notice that this can be (and usually is) different from the selection rect, as those are about the flow and advance of the text. A font that is particularly slanted or whose accents go beyond the flow of text will have a different paint bounding box. For example: if you select this: ***W*** you will see that the end of the W is outside the selection area, which would be covered by the paint (actual bounding box) area.
 
-`getTextClustersForRange()` provides the ability to render minimal grapheme clusters (in conjunction with a new method for the canvas rendering context, more on that later). That is, for the character range given as in input, it returns the minimal rendering operations broken down as much as logically possible, with their corresponding positional data. The position is calculated with the original anchor point for the text as reference, while the `text_align` and `text_baseline` parameters determine the desired alignment of each cluster.
+`getTextClusters()` provides the ability to render minimal grapheme clusters (in conjunction with a new method for the canvas rendering context, more on that later). That is, for the character range given as in input, it returns the minimal rendering operations broken down as much as logically possible, with their corresponding positional data. The position is calculated with the original anchor point for the text as reference, while the `text_align` and `text_baseline` parameters determine the desired alignment of each cluster.
 
-In practice, this means that when rendering the returned `TextCluster` objects, the canvas context should have its `textAlign` and `textBaseline` values set equal to these parameters in order to reproduce the original measured text exactly. For `text_align` specifically, the position is calculated in regards of the advance of said grapheme cluster in the text. For example: if the `text_align` passed to the function is `center`, for the letter **T** in the string **Test**, the position returned will be not exactly be in the middle of the **T**. This is because the advance is reduced by the kerning between the first two letters, making it less than the width of a **T** rendered on its own.
+To actually render these clusters on the screen, a new method for the rendering context is proposed: `fillTextCluster()`. It renders the cluster with the `text_align` and `text_baseline` stored in the object, ignoring tha values set in the context. The same is true for the font, meaning that even if the it is changed on the context, the cluster will be rendered using the font that was applied when `ctx.measureText()` was called. Note that this is true also for the scenario in which the text is measured before the font has loaded. This guarantees that the positional values are consistent with what is rendered by `fillTextCluster()`. 
+
+For `text_align` specifically, the position is calculated in regards of the advance of said grapheme cluster in the text. For example: if the `text_align` passed to the function is `center`, for the letter **T** in the string **Test**, the position returned will be not exactly be in the middle of the **T**. This is because the advance is reduced by the kerning between the first two letters, making it less than the width of a **T** rendered on its own.
 
 To guarantee that the shaping of each cluster is indeed the same as it was when measured, it's necessary to use the whole string as context when rendering each cluster. That is why the complete text is referenced in the `TextCluster` objects, since the proposed `fillTextCluster()` API for the Canvas2D context requires it for rendering.
 
