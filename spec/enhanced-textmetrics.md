@@ -109,11 +109,10 @@ let clusters = tm.getTextClustersForRange(0, text.length,
                                          {align: 'left', 
                                           baseline: 'middle'});
 
+const colors = ['orange', 'navy', 'teal', 'crimson'];
 for(let cluster of clusters) {
-    let blue = 100 * cluster.x / tm.width;
-    let green = 100 - blue;
-    ctx.fillStyle = `rgb(100%, ${blue}%, ${green}%)`;
-    ctx.fillTextCluster(cluster, 0, 0);
+    ctx.fillStyle = colors[cluster.begin % colors.length];
+    ctx.fillTextCluster(cluster);
 }
 ```
 
