@@ -10,7 +10,7 @@ Extend the capabilities of `TextMetrics` to support selection rectangles and bou
 
 Users should be able to interact with canvas-based text input that correctly renders selection and caret positions.
 
-All metrics available through DOM APIs should also be available on `measureText()`. Furthermore, `measureText()` will always be limited to a single style, and therefore has the potential to be slightly faster (as it doesn’t need layout). `measureText()` must return the same value as the equivalent DOM APIs.
+All metrics available through DOM APIs should also be available on `measureText()`. Furthermore, `measureText()` will always be limited to a single style, and therefore has the potential to be slightly faster (as it doesn’t need layout). `measureText()` must return the same values as the equivalent DOM APIs.
 
 We also want to provide more power to current canvas text rendering APIs.
 
@@ -51,11 +51,13 @@ interface CanvasRenderingContext2D {
 };
 ```
 
-All functions operate in character ranges and return rectangles and positions relative to the text’s origin (i.e., `textBaseline`/`textAlign` is taken into account).
-
 `getSelectionRects()` returns the set of rectangles that the UA would render as selection to select a particular character range.
 
 `getActualBoundingBox()` returns an equivalent box to `TextMetrics.actualBoundingBox`, i.e., the bounding rectangle for the drawing of that range. Notice that this can be (and usually is) different from the selection rect, as those are about the flow and advance of the text. A font that is particularly slanted or whose accents go beyond the flow of text will have a different paint bounding box. For example: if you select this: ***W*** you will see that the end of the W is outside the selection area, which would be covered by the paint (actual bounding box) area.
+
+`caretPositionFromPoint()` returns the character offset for the character at the given `offset` distance from the start position of the text run (accounting for `textAlign` and `textBaseline`) with offset always increasing
+left to right (so negative offsets are valid). Values to the left or right of the text bounds will return 0 or
+`num_characters` depending on the writing direction. The functionality is similar but not identical to [`document.caretPositionFromPoint`](https://developer.mozilla.org/en-US/docs/Web/API/Document/caretPositionFromPoint). In particular, there is no need to return the element containing the caret and offsets beyond the boundaries of the string are acceptable.
 
 `getTextClusters()` provides the ability to render minimal grapheme clusters (in conjunction with a new method for the canvas rendering context, more on that later). That is, for the character range given as in input, it returns the minimal rendering operations broken down as much as logically possible, with their corresponding positional data. The position is calculated with the original anchor point for the text as reference, while the `text_align` and `text_baseline` parameters determine the desired alignment of each cluster.
 
@@ -64,6 +66,8 @@ To actually render these clusters on the screen, a new method for the rendering 
 For `text_align` specifically, the position is calculated in regards of the advance of said grapheme cluster in the text. For example: if the `text_align` passed to the function is `center`, for the letter **T** in the string **Test**, the position returned will be not exactly be in the middle of the **T**. This is because the advance is reduced by the kerning between the first two letters, making it less than the width of a **T** rendered on its own.
 
 To guarantee that the shaping of each cluster is indeed the same as it was when measured, it's necessary to use the whole string as context when rendering each cluster. That is why the complete text is referenced in the `TextCluster` objects, since the proposed `fillTextCluster()` API for the Canvas2D context requires it for rendering.
+
+`getSelectionRects()`, `getActualBoundingBox()`, and `getTextClusters()` operate in character ranges and use positions relative to the text’s origin (i.e., `textBaseline`/`textAlign` is taken into account).
 
 ## Example usage
 
