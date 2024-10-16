@@ -25,13 +25,12 @@ dictionary TextAnchorPoint {
 
 [Exposed=(Window,Worker)]
 interface TextCluster {
-    attribute DOMString text;
     attribute double x;
     attribute double y;
-    attribute unsigned long begin;
-    attribute unsigned long end;
-    attribute DOMString align;
-    attribute DOMString baseline;
+    readonly attribute unsigned long begin;
+    readonly attribute unsigned long end;
+    readonly attribute DOMString align;
+    readonly attribute DOMString baseline;
 };
 
 [Exposed=(Window,Worker)] interface TextMetrics {
@@ -47,7 +46,7 @@ interface TextCluster {
 interface CanvasRenderingContext2D {
     // ... extended from current CanvasRenderingContext2D.
 
-    void fillTextCluster(TextCluster textCluster, optional double x, optional double y);
+    void fillTextCluster(TextCluster textCluster, double x, double y);
 };
 ```
 
@@ -61,11 +60,9 @@ left to right (so negative offsets are valid). Values to the left or right of th
 
 `getTextClusters()` provides the ability to render minimal grapheme clusters (in conjunction with a new method for the canvas rendering context, more on that later). That is, for the character range given as in input, it returns the minimal rendering operations broken down as much as logically possible, with their corresponding positional data. The position is calculated with the original anchor point for the text as reference, while the `text_align` and `text_baseline` parameters determine the desired alignment of each cluster.
 
-To actually render these clusters on the screen, a new method for the rendering context is proposed: `fillTextCluster()`. It renders the cluster with the `text_align` and `text_baseline` stored in the object, ignoring tha values set in the context. The same is true for the font, meaning that even if the it is changed on the context, the cluster will be rendered using the font that was applied when `ctx.measureText()` was called. Note that this is true also for the scenario in which the text is measured before the font has loaded. This guarantees that the positional values are consistent with what is rendered by `fillTextCluster()`. 
+To actually render these clusters on the screen, a new method for the rendering context is proposed: `fillTextCluster()`. It renders the cluster with the `text_align` and `text_baseline` stored in the object, ignoring the values set in the context. Additionally, to guarantee that the rendered cluster is accurate with the measured text, the rest of the `CanvasTextDrawingStyles` must be applied as they were when `ctx.measureText()` was called, regardless of any changes in these values on the context since. Note that to guarantee that the shaping of each cluster is indeed the same as it was when measured, it's necessary to use the whole string as context when rendering each cluster.
 
 For `text_align` specifically, the position is calculated in regards of the advance of said grapheme cluster in the text. For example: if the `text_align` passed to the function is `center`, for the letter **T** in the string **Test**, the position returned will be not exactly be in the middle of the **T**. This is because the advance is reduced by the kerning between the first two letters, making it less than the width of a **T** rendered on its own.
-
-To guarantee that the shaping of each cluster is indeed the same as it was when measured, it's necessary to use the whole string as context when rendering each cluster. That is why the complete text is referenced in the `TextCluster` objects, since the proposed `fillTextCluster()` API for the Canvas2D context requires it for rendering.
 
 `getSelectionRects()`, `getActualBoundingBox()`, and `getTextClusters()` operate in character ranges and use positions relative to the text’s origin (i.e., `textBaseline`/`textAlign` is taken into account).
 
