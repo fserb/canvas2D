@@ -113,7 +113,7 @@ let clusters = tm.getTextClustersForRange(0, text.length,
 const colors = ['orange', 'navy', 'teal', 'crimson'];
 for(let cluster of clusters) {
     ctx.fillStyle = colors[cluster.begin % colors.length];
-    ctx.fillTextCluster(cluster);
+    ctx.fillTextCluster(cluster, 0, 0);
 }
 ```
 
