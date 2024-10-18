@@ -121,5 +121,7 @@ Expected output:
 
 ![enhanced textMetrics output](../images/text-clusters-output.png)
 
+`getTextClusters()` and `fillTextCluster()` can be used on Chrome Canary (starting from version `132.0.6783.0`) by enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`). 
+
 ## Alternatives and Open Questions
 
