@@ -30,8 +30,8 @@ interface TextCluster {
     readonly attribute double y;
     readonly attribute unsigned long start;
     readonly attribute unsigned long end;
-    readonly attribute DOMString align;
-    readonly attribute DOMString baseline;
+    readonly attribute CanvasTextAlign align;
+    readonly attribute CanvasTextBaseline baseline;
 };
 
 [Exposed=(Window,Worker)] interface TextMetrics {
