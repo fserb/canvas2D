@@ -10,7 +10,7 @@ In active development
 
 - [**Layers**](spec/layers.md). Support layers in canvas, that will be drawn in one, allowing effects only possible with auxiliary canvases.
 
-- [**WebGPU Access**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU/WebGL.
+- [**WebGPU Access**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU.
 
 - [**Enhanced Text Metrics**](spec/enhanced-textmetrics.md). Extend measureText to support DOM-provided APIs, like selection rect and more.
 
