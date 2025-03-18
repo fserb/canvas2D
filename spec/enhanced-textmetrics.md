@@ -14,13 +14,12 @@ All metrics available through DOM APIs should also be available on `measureText(
 
 We also want to provide more power to current canvas text rendering APIs.
 
-
 ## Proposal
 
 ```webidl
 dictionary TextClusterOptions {
-  DOMString align;
-  DOMString baseline;
+  CanvasTextAlign align;
+  CanvasTextBaseline baseline;
   double x;
   double y;
 };
@@ -29,7 +28,7 @@ dictionary TextClusterOptions {
 interface TextCluster {
     readonly attribute double x;
     readonly attribute double y;
-    readonly attribute unsigned long begin;
+    readonly attribute unsigned long start;
     readonly attribute unsigned long end;
     readonly attribute DOMString align;
     readonly attribute DOMString baseline;
@@ -40,6 +39,7 @@ interface TextCluster {
   
   sequence<DOMRectReadOnly> getSelectionRects(unsigned long start, unsigned long end);
   DOMRectReadOnly getActualBoundingBox(unsigned long start, unsigned long end);
+  sequence<TextCluster> getTextClusters(optional TextClusterOptions options);
   sequence<TextCluster> getTextClusters(unsigned long start, unsigned long end, optional TextClusterOptions options);
 
   unsigned long getIndexFromOffset(double offset);
@@ -49,6 +49,7 @@ interface CanvasRenderingContext2D {
     // ... extended from current CanvasRenderingContext2D.
 
     void fillTextCluster(TextCluster textCluster, double x, double y, optional TextClusterOptions options);
+    void strokeTextCluster(TextCluster textCluster, double x, double y, optional TextClusterOptions options);
 };
 ```
 
@@ -60,13 +61,13 @@ The `getIndexFromOffset` method returns the strign indext for the character at t
 left to right (so negative offsets are valid). Values to the left or right of the text bounds will return 0 or
 `string.length` depending on the writing direction. The functionality is similar but not identical to [`document.caretPositionFromPoint`](https://developer.mozilla.org/en-US/docs/Web/API/Document/caretPositionFromPoint). In particular, there is no need to return the element containing the caret and offsets beyond the boundaries of the string are acceptable.
 
-`getTextClusters()` provides the ability to render minimal grapheme clusters (in conjunction with a new method for the canvas rendering context, more on that later). That is, for the character range given as in input, it returns the minimal rendering operations broken down as much as logically possible, with their corresponding positional data. The position is calculated with the original anchor point for the text as reference, while the `align` and `baseline` parameters in the options dictionary determine the desired alignment of each cluster.
+`getTextClusters()` provides the ability to render minimal grapheme clusters (in conjunction with a new method for the canvas rendering context, more on that later). That is, for the character range given as in input, it returns the minimal rendering operations broken down as much as logically possible, with their corresponding positional data. The position is calculated with the original anchor point for the text as reference, while the `align` and `baseline` parameters in the options dictionary determine the desired alignment of each cluster. If no options dictionary is passed, these values are taken from the same as the ones used for the anchor point. If no range is passed, the whole text gets split into clusters.
 
-To actually render these clusters on the screen, a new method for the rendering context is proposed: `fillTextCluster()`. It renders the cluster with the `align` and `baseline` stored in the object, ignoring the values set in the context. Additionally, to guarantee that the rendered cluster is accurate with the measured text, the rest of the `CanvasTextDrawingStyles` must be applied as they were when `ctx.measureText()` was called, regardless of any changes in these values on the context since. Note that to guarantee that the shaping of each cluster is indeed the same as it was when measured, it's necessary to use the whole string as context when rendering each cluster.
+To actually render these clusters on the screen, two new methods for the rendering context is proposed: `fillTextCluster()` and `strokeTextCluster()`. They renders the cluster with the `align` and `baseline` stored in the object, ignoring the values set in the context. Additionally, to guarantee that the rendered cluster is accurate with the measured text, the rest of the `CanvasTextDrawingStyles` must be applied as they were when `ctx.measureText()` was called, regardless of any changes in these values on the context since. Note that to guarantee that the shaping of each cluster is indeed the same as it was when measured, it's necessary to use the whole string as context when rendering each cluster.
+
+To enable additional flexibility, an options dictionary can be passed to `fillTextCluster()` and `strokeTextCluster()` to override the values for `align`, `baseline`, `x`, and `y` that will be used to render that cluster. For example, calling `ctx.fillTextCluster(cluster, 10, 10, {x: 0, y:0})` will render the cluster exactly at position `(10, 10)`, instead of rendering as if the text as a whole was placed at `(10, 10)` (which is what the internal `x` and `y` values of the cluster represent). This same overriding applies to the `align` and `baseline` parameters if they are passed in the options dictionary. These options passed to `fillTextCluster()` don't modify the underlying cluster object, and only apply to the rendering of that specific call.
 
 For `align` specifically, the position is calculated in regards of the advance of said grapheme cluster in the text. For example: if the `align` passed to the function is `center`, for the letter **T** in the string **Test**, the position returned will be not exactly be in the middle of the **T**. This is because the advance is reduced by the kerning between the first two letters, making it less than the width of a **T** rendered on its own.
-
-To enable additional flexibility, an options dictionary can be passed to `fillTextCluster()` to override the values for `align`, `baseline`, `x`, and `y` that will be used to render that cluster. For example, calling `ctx.fillTextCluster(cluster, 10, 10, {x: 0, y:0})` will render the cluster exactly at position `(10, 10)`, instead of rendering as if the text as a whole was placed at `(10, 10)` (which is what the internal `x` and `y` values of the cluster represent). This same overriding applies to the `align` and `baseline` parameters if they are passed in the options dictionary. These options passed to `fillTextCluster()` don't modify the underlying cluster object, and only apply to the rendering of that specific call. 
 
 `getSelectionRects()`, `getActualBoundingBox()`, and `getTextClusters()` operate in character ranges and use positions relative to the text’s origin (i.e., `textBaseline`/`textAlign` is taken into account).
 
@@ -112,7 +113,7 @@ ctx.textBaseline = 'middle';
 
 const text = 'Colors 🎨 are 🏎️ fine!';
 let tm = ctx.measureText(text);
-let clusters = tm.getTextClustersForRange(0, text.length);
+let clusters = tm.getTextClusters();
 
 const colors = ['orange', 'navy', 'teal', 'crimson'];
 for(let cluster of clusters) {
@@ -138,7 +139,7 @@ let text = "🐞 Render this text on a circle! 🐈‍⬛";
 
 const tm = ctx.measureText(text);
 // We want the x-position of the center of each cluster. 
-const clusters = tm.getTextClusters(0, text.length, {align: 'center'});
+const clusters = tm.getTextClusters({align: 'center'});
 
 for (const cluster of clusters) {
     // Since ctx.textAlign was set to 'left' before measuring, all values of
@@ -164,7 +165,7 @@ Expected output:
 
 ![A text string containing emoji rendered in a circle, with each glyph rotated according to its position](../images/text-clusters-circle.png)
 
-`getTextClusters()` and `fillTextCluster()` can be used on Chrome Canary (starting from version `132.0.6783.0`) by enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`). 
+`getTextClusters()` and `fillTextCluster()` can be used on Chrome Canary (starting from version `132.0.6783.0`) by enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`). `strokeTextCluster()` is available in Chrome Canary from version `135.0.7039.0`.
 
 ## Alternatives and Open Questions
 
