@@ -167,5 +167,44 @@ Expected output:
 
 `getTextClusters()` and `fillTextCluster()` can be used on Chrome Canary (starting from version `132.0.6783.0`) by enabling the feature with `--enable-features=ExtendedTextMetrics` (or the general `--enable-experimental-web-platform-features`). `strokeTextCluster()` is available in Chrome Canary from version `135.0.7039.0`.
 
-## Alternatives and Open Questions
+## Alternatives considered
+### DOM Element inputs
+Instead of a plain string, the `TextCluster` API could take an `Element` wrapper.
 
+#### Pros
+* Access to full CSS styling capabilities for text, beyond what is currently available in Canvas.
+* Potentially improved accessibility.
+
+#### Cons
+##### High-level considerations
+Sophisticated clients (e.g. FlutterWeb or Google Docs), which stand to benefit most from this proposal, already implement bespoke a11y solutions in higher layers.  Enforcing a11y at this level is unnecessary in their case, and would result in unneeded friction.
+
+More generally, a11y at this level runs into a couple of issues:
+
+1) **Scoping/granularity**: the `TextMetrics` API is a low-level utility that doesn’t necessarily receive a full semantic payload in a single call.  Clients may decide to break down the input text for rendering in various ways (e.g. small view into a larger paragraph, streaming text, etc), and they may not even measure the fragments in a semanticly-meaningful order.
+
+2) **Metrics-vs-presentation sequencing**: a `measureText` call does not render any text by itself, and activating the a11y machinery at that stage seems fragile.  The client may decide to defer rendering, to only render parts of the string, or to not render at all (measuring for other purposes).
+
+##### API ergonomics
+`TextMetrics.getTextClusters()` returns input-domain indices, in order to surface character-cluster -> glyph-cluster mapping information to clients.  If the input string is to be presented as a DOM element, the semantics become more convoluted - how do we convey indexing information for element-wrapped text?  One possible solution is to return [`CaretPositions`](https://developer.mozilla.org/en-US/docs/Web/API/CaretPosition), which would potentially allow reconstructing the indices in the character domain.  Since clients start with a string, these additional transformations introduce friction and create opportunities for errors.
+
+The current proposal is also incremental, meant to minimize the affected API surface area.  As such, it piggy-backs on the existing [`CanvasRenderingContext2D.measureText()`](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/measureText) API, which takes a string input.  Changing the input to an element would require more extensive API updates.
+
+##### Performance concerns
+* Overhead for measuring text presented as an Element: unlike the low level version of the proposal, the high-level/Element version activates additional implementation layers which add up to non-trivial overhead (CSS resolution, layout).
+
+* Overhead for allocating/managing DOM elements.
+
+### HTML-in-Canvas
+
+Use [HTML-in-Canvas](https://github.com/WICG/html-in-canvas) (formerly known as `placeElement`/`drawElement`) as a general solution for sophisticated text rendering in Canvas.
+
+#### Pros
+Potentially more accessible, full CSS capabilities.
+
+#### Cons
+While there is some overlap, HTML-in-Canvas does not address some of the core/complex text shaping use cases supported by `TextMetrics`/`TextCluster`.  Specifically, the ability to draw clusters in isolation, with different transforms/positioning than originally measured.
+
+HTML-in-Canvas is also in the proposal stages, and the availability/timeline is unclear.
+
+The same performance concerns apply.
