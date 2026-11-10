@@ -12,7 +12,7 @@ In active development
 
 - [**WebGPU Access**](spec/webgpu.md). Switch contexts between Canvas2D and WebGPU.
 
-- [**Enhanced Text Metrics**](spec/enhanced-textmetrics.md). Extend measureText to support DOM-provided APIs, like selection rect and more.
+- [**Enhanced Text Metrics**](spec/enhanced-textmetrics.md). Extend Canvas 2D text (`shapeText()`, `ShapedText`, `GlyphRun`) to support selection rects, hit testing, and cluster rendering.
 
 - [**Mesh2D**](spec/mesh2d.md). Draw a large number of texture-mapped triangles efficiently.
 
