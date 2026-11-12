@@ -203,8 +203,6 @@ Potentially more accessible, full CSS capabilities.
 #### Cons
 While there is some overlap, HTML-in-Canvas does not address some of the core/complex text shaping use cases supported by `ShapedText`/`GlyphRun`.  Specifically, the ability to draw clusters in isolation, with different transforms/positioning than originally measured.
 
-HTML-in-Canvas is also in the proposal stages, and the availability/timeline is unclear.
-
 The same performance concerns apply.
 
 ### WebKit proposal
